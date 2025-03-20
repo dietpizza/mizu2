@@ -61,4 +61,5 @@ dependencies {
 
     // additional dependencies
     implementation libs.androidx.swiperefreshlayout
+    implementation libs.coil.kt.coil.compose
 }
