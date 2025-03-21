@@ -2,13 +2,27 @@ package com.kepsake.mizu2.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.kepsake.mizu2.data.diff.MangaDiffCallback
+import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.databinding.WidgetMangaCardBinding
 
 
-class MangaCardImageAdapter(private val imageUrls: List<String>) :
+class MangaCardImageAdapter(
+    private var mangaList: List<MangaFile>,
+    private val onItemClick: (MangaFile) -> Unit
+) :
     RecyclerView.Adapter<MangaCardImageAdapter.MangaCardImageViewHolder>() {
+
+    fun updateData(newData: List<MangaFile>) {
+        val diffCallback = MangaDiffCallback(mangaList, newData)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+
+        mangaList = newData
+        diffResult.dispatchUpdatesTo(this)
+    }
 
     class MangaCardImageViewHolder(val binding: WidgetMangaCardBinding) :
         RecyclerView.ViewHolder(binding.root)
@@ -20,12 +34,13 @@ class MangaCardImageAdapter(private val imageUrls: List<String>) :
     }
 
     override fun onBindViewHolder(holder: MangaCardImageViewHolder, position: Int) {
-        val imageUrl = imageUrls[position]
+        val manga = mangaList[position]
 
-        holder.binding.gridImageView.load(imageUrl) {
+        holder.binding.gridImageView.load(manga) {
             crossfade(true)
         }
+        holder.itemView.setOnClickListener { onItemClick(manga) }
     }
 
-    override fun getItemCount(): Int = imageUrls.size
+    override fun getItemCount(): Int = mangaList.size
 }

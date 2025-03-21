@@ -1,0 +1,59 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:3613979454179901133",
+      "lastPropertyId": "6:1474136286719850022",
+      "name": "MangaFile",
+      "properties": [
+        {
+          "id": "1:5875249752538015274",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1025319044886396272",
+          "name": "path",
+          "indexId": "1:4280946979253782908",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:4440652637674044273",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "4:5746414655970187937",
+          "name": "cover_path",
+          "type": 9
+        },
+        {
+          "id": "5:7873079398784517003",
+          "name": "last_page",
+          "type": 5
+        },
+        {
+          "id": "6:1474136286719850022",
+          "name": "total_pages",
+          "type": 5
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "1:3613979454179901133",
+  "lastIndexId": "1:4280946979253782908",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}
