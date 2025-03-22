@@ -39,9 +39,10 @@ class MangaCardImageAdapter(
     override fun onBindViewHolder(holder: MangaCardImageViewHolder, position: Int) {
         val manga = mangaList[position]
 
-        holder.binding.gridImageView.load(manga.cover_path) {
+        holder.binding.mangaCover.load(manga.cover_path) {
             crossfade(true)
         }
+        holder.binding.mangaName.setText(manga.name)
         holder.itemView.setOnClickListener { onItemClick(manga) }
     }
 
