@@ -1,4 +1,4 @@
-package com.kepsake.mizu2.data.diff
+package com.kepsake.mizu2.adapters.diff
 
 import androidx.recyclerview.widget.DiffUtil
 import com.kepsake.mizu2.data.models.MangaFile
@@ -22,7 +22,7 @@ class MangaDiffCallback(
 
         return oldItem.name == newItem.name
                 && oldItem.cover_path == newItem.cover_path
-                && oldItem.last_page == newItem.last_page
+                && oldItem.current_page == newItem.current_page
                 && oldItem.total_pages == newItem.total_pages
     }
 }

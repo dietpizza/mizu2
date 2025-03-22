@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:3613979454179901133",
-      "lastPropertyId": "6:1474136286719850022",
+      "lastPropertyId": "7:5013158832258850693",
       "name": "MangaFile",
       "properties": [
         {
@@ -40,6 +40,11 @@
           "id": "6:1474136286719850022",
           "name": "total_pages",
           "type": 5
+        },
+        {
+          "id": "7:5013158832258850693",
+          "name": "last_modified",
+          "type": 6
         }
       ],
       "relations": []

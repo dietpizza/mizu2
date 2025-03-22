@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.kepsake.mizu2.data.diff.MangaDiffCallback
+import com.kepsake.mizu2.adapters.diff.MangaDiffCallback
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.databinding.WidgetMangaCardBinding
 
