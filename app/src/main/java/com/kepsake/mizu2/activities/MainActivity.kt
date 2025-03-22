@@ -34,7 +34,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 val TAG = "MainActivity"
-const val REQUEST_CODE_PICK_DIRECTORY = 1001
 
 class MainActivity : ComponentActivity() {
 
@@ -43,8 +42,21 @@ class MainActivity : ComponentActivity() {
     private lateinit var mainBinding: ActivityMainBinding
 
     private val mangaFileViewModel: MangaFileViewModel by viewModels()
+
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
+    private val folderPickerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    val sharedPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                    val libraryPath = getFilePathFromUri(this, uri)
+
+                    sharedPrefs.edit().putString(LibraryPath, libraryPath).apply()
+                    syncLibrary()
+                }
+            }
+        }
 
     fun init() {
         initTopLoader()
@@ -172,43 +184,31 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun openFolderPicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        intent.addCategory(Intent.CATEGORY_DEFAULT)
+        folderPickerLauncher.launch(intent)
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        requestManageExternalStoragePermission()
         mainBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(mainBinding.root)
+
+        // Ask for permission the first
+        requestManageExternalStoragePermission()
+
         setStatusBarColor()
 
-        // Initialize MangaBox
         val boxStore = (application as MizuApplication).boxStore
         mangaBox = boxStore.boxFor()
         mangaFileViewModel.init(mangaBox)
         mangaFileViewModel.loadMangaFiles()
 
         mainBinding.root.post { init() }
-    }
-
-    private val folderPickerLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            result.data?.data?.let { uri ->
-                val sharedPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                val libraryPath = getFilePathFromUri(this, uri)
-
-                sharedPrefs.edit().putString(LibraryPath, libraryPath).apply()
-                syncLibrary()
-            }
-        }
-    }
-
-    // Replace your openFolderPicker() with this
-    private fun openFolderPicker() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-        intent.addCategory(Intent.CATEGORY_DEFAULT)
-        folderPickerLauncher.launch(intent)
     }
 
 }

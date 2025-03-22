@@ -66,5 +66,4 @@ dependencies {
     implementation libs.coil.kt.coil.compose
     implementation libs.objectbox.android
     implementation libs.objectbox.kotlin
-    implementation libs.storage
 }
