@@ -2,21 +2,20 @@ package com.kepsake.mizu2.activities
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.view.WindowInsets
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-import com.anggrayudi.storage.SimpleStorageHelper
+import com.google.android.material.color.MaterialColors
 import com.kepsake.mizu2.MizuApplication
 import com.kepsake.mizu2.adapters.MangaCardImageAdapter
 import com.kepsake.mizu2.constants.LibraryPath
@@ -26,29 +25,28 @@ import com.kepsake.mizu2.databinding.ActivityMainBinding
 import com.kepsake.mizu2.ui.GridSpacingItemDecoration
 import com.kepsake.mizu2.utils.dpToPx
 import com.kepsake.mizu2.utils.getFilePathFromUri
+import com.kepsake.mizu2.utils.getSystemBarsHeight
 import com.kepsake.mizu2.utils.processMangaFiles
 import com.kepsake.mizu2.utils.setStatusBarColor
 import io.objectbox.Box
 import io.objectbox.kotlin.boxFor
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 val TAG = "MainActivity"
 const val REQUEST_CODE_PICK_DIRECTORY = 1001
 
 class MainActivity : ComponentActivity() {
-    private val storageHelper = SimpleStorageHelper(this)
 
     private lateinit var mangaBox: Box<MangaFile>
     private lateinit var mangaAdapter: MangaCardImageAdapter
-    private val viewModel: MangaFileViewModel by viewModels()
+    private lateinit var mainBinding: ActivityMainBinding
 
-    private lateinit var binding: ActivityMainBinding
-
+    private val mangaFileViewModel: MangaFileViewModel by viewModels()
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
     fun init() {
-        requestManageExternalStoragePermission()
         initTopLoader()
         initGridView()
         initGetDataView()
@@ -57,60 +55,78 @@ class MainActivity : ComponentActivity() {
     }
 
     fun initTopLoader() {
-        binding.pullToRefresh.setProgressViewOffset(true, 0, 200)
-        binding.pullToRefresh.isEnabled = false
-        binding.pullToRefresh.isRefreshing = false
+        val heights = getSystemBarsHeight(this)
+
+        mainBinding.pullToRefresh.setProgressViewOffset(
+            true,
+            0,
+            heights.statusBarHeight + dpToPx(24f)
+        )
+        mainBinding.pullToRefresh.isEnabled = false
+        mainBinding.pullToRefresh.isRefreshing = false
+
+        mainBinding.pullToRefresh.setColorSchemeColors(
+            MaterialColors.getColor(
+                this,
+                com.google.android.material.R.attr.colorOnSurface,
+                Color.WHITE
+            ),
+        )
+
+        mainBinding.pullToRefresh.setProgressBackgroundColorSchemeColor(
+            MaterialColors.getColor(
+                this,
+                com.google.android.material.R.attr.colorSurfaceVariant,
+                Color.WHITE
+            )
+        )
     }
 
     fun initGridView() {
         val layoutManager = GridLayoutManager(this, 2)
-        val insets: WindowInsets =
-            this.getWindowManager().getCurrentWindowMetrics().getWindowInsets()
-        val statusBarHeight: Int =
-            insets.getInsets(WindowInsetsCompat.Type.statusBars()).top //in pixels
-        val navigationBarHeight: Int =
-            insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom //in pixels
 
+        val heights = getSystemBarsHeight(this)
 
         // Layout and data
         mangaAdapter = MangaCardImageAdapter(emptyList(), {})
-        binding.mangaList.layoutManager = layoutManager
-        binding.mangaList.adapter = mangaAdapter
+        mainBinding.mangaList.layoutManager = layoutManager
+        mainBinding.mangaList.adapter = mangaAdapter
 
         // styling
-        binding.mangaList.setPadding(
-            binding.mangaList.paddingLeft,
-            statusBarHeight,
-            binding.mangaList.paddingRight,
-            navigationBarHeight
+        mainBinding.mangaList.setPadding(
+            mainBinding.mangaList.paddingLeft,
+            mainBinding.mangaList.paddingTop + heights.statusBarHeight,
+            mainBinding.mangaList.paddingRight,
+            mainBinding.mangaList.paddingBottom + heights.navigationBarHeight
         )
-        binding.mangaList.clipToPadding = false
-        binding.mangaList.addItemDecoration(GridSpacingItemDecoration(2, dpToPx(8f), true))
+        mainBinding.mangaList.clipToPadding = false
+        mainBinding.mangaList.addItemDecoration(GridSpacingItemDecoration(2, dpToPx(16f), false))
     }
 
     fun initGetDataView() {
-        binding.selectFolderButton.setOnClickListener({
-            storageHelper.openFolderPicker(REQUEST_CODE_PICK_DIRECTORY)
+        mainBinding.selectFolderButton.setOnClickListener({
+            openFolderPicker()
         })
     }
 
-    private fun observeMangaData() {
-        viewModel.mangaFiles.observe(this, {
+    fun observeMangaData() {
+        mangaFileViewModel.mangaFiles.observe(this, {
+            Log.e(TAG, "observeMangaData: $it")
             mangaAdapter.updateData(it)
+            syncViewVisibility()
         })
     }
 
-    fun syncViewVisibility(mangaList: List<MangaFile>) {
+    fun syncViewVisibility() {
+        val mangaList = mangaFileViewModel.mangaFiles.value ?: emptyList()
         val sharedPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val libraryPath = sharedPrefs.getString(LibraryPath, null)
         val isLibraryPathAvailable = libraryPath != null
 
-        Log.e(TAG, "syncViewVisibility: 0 $isLibraryPathAvailable ")
 
-        if (!isLibraryPathAvailable) {
-            Log.e(TAG, "syncViewVisibility: 1")
-            binding.getDataLayout.visibility = View.VISIBLE
-            binding.pullToRefresh.visibility = View.GONE
+        if (!isLibraryPathAvailable && !mainBinding.pullToRefresh.isRefreshing) {
+            mainBinding.getDataLayout.visibility = View.VISIBLE
+            mainBinding.mangaList.visibility = View.GONE
         }
 
         if (isLibraryPathAvailable && mangaList.isEmpty()) {
@@ -118,10 +134,9 @@ class MainActivity : ComponentActivity() {
             // TODO show change folder ui
         }
 
-        if (isLibraryPathAvailable && mangaList.isNotEmpty()) {
-            Log.e(TAG, "syncViewVisibility: 3")
-            binding.getDataLayout.visibility = View.GONE
-            binding.pullToRefresh.visibility = View.VISIBLE
+        if (isLibraryPathAvailable) {
+            mainBinding.getDataLayout.visibility = View.GONE
+            mainBinding.mangaList.visibility = View.VISIBLE
         }
     }
 
@@ -132,10 +147,18 @@ class MainActivity : ComponentActivity() {
             Log.e(TAG, "syncLibrary: $libraryPath")
 
             if (libraryPath != null) {
+                mainBinding.pullToRefresh.isRefreshing = true
+                syncViewVisibility()
                 val mangas = processMangaFiles(this@MainActivity, libraryPath)
                 mangas.forEach {
                     Log.e(TAG, "syncLibrary: $it")
                 }
+                mangaFileViewModel.batchAddMangaFiles(mangas)
+
+                // This is to avoid weird animation jumps
+                delay(200)
+                mainBinding.pullToRefresh.isRefreshing = false
+                syncViewVisibility()
             }
         }
     }
@@ -153,30 +176,39 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        requestManageExternalStoragePermission()
+        mainBinding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(mainBinding.root)
         setStatusBarColor()
 
         // Initialize MangaBox
         val boxStore = (application as MizuApplication).boxStore
         mangaBox = boxStore.boxFor()
-        viewModel.init(mangaBox)
-        viewModel.loadMangaFiles()
-        syncViewVisibility(viewModel.mangaFiles.value ?: emptyList())
+        mangaFileViewModel.init(mangaBox)
+        mangaFileViewModel.loadMangaFiles()
 
-        storageHelper.onFolderSelected = { _, folder ->
-            val sharedPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            val libraryPath = getFilePathFromUri(this, folder.uri)
+        mainBinding.root.post { init() }
+    }
 
-            sharedPrefs.edit().putString(LibraryPath, libraryPath).apply()
-            syncLibrary()
+    private val folderPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            result.data?.data?.let { uri ->
+                val sharedPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                val libraryPath = getFilePathFromUri(this, uri)
+
+                sharedPrefs.edit().putString(LibraryPath, libraryPath).apply()
+                syncLibrary()
+            }
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        binding.root.post { init() }
+    // Replace your openFolderPicker() with this
+    private fun openFolderPicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        intent.addCategory(Intent.CATEGORY_DEFAULT)
+        folderPickerLauncher.launch(intent)
     }
 
 }

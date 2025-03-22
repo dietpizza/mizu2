@@ -1,5 +1,6 @@
 package com.kepsake.mizu2.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -9,6 +10,7 @@ import com.kepsake.mizu2.adapters.diff.MangaDiffCallback
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.databinding.WidgetMangaCardBinding
 
+val TAG = "MangaCardImageAdapter"
 
 class MangaCardImageAdapter(
     private var mangaList: List<MangaFile>,
@@ -20,6 +22,7 @@ class MangaCardImageAdapter(
         val diffCallback = MangaDiffCallback(mangaList, newData)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
 
+        Log.e(TAG, "updateData: $newData")
         mangaList = newData
         diffResult.dispatchUpdatesTo(this)
     }
@@ -36,7 +39,7 @@ class MangaCardImageAdapter(
     override fun onBindViewHolder(holder: MangaCardImageViewHolder, position: Int) {
         val manga = mangaList[position]
 
-        holder.binding.gridImageView.load(manga) {
+        holder.binding.gridImageView.load(manga.cover_path) {
             crossfade(true)
         }
         holder.itemView.setOnClickListener { onItemClick(manga) }

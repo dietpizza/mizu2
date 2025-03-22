@@ -23,7 +23,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -64,7 +64,7 @@ dependencies {
     // additional dependencies
     implementation libs.androidx.swiperefreshlayout
     implementation libs.coil.kt.coil.compose
-    implementation(libs.objectbox.android) // Use latest version
-    implementation(libs.objectbox.kotlin) // Kotlin support
+    implementation libs.objectbox.android
+    implementation libs.objectbox.kotlin
     implementation libs.storage
 }

@@ -78,7 +78,8 @@ fun extractCoverImage(coversDir: File, mangaPath: String): String? {
     val entry = getZipFileEntries(mangaPath).firstOrNull()
 
     if (entry != null) {
-        val outFile = File(coversDir, sanitizeFileName(entry.name))
+        val entryName = File(mangaPath).name
+        val outFile = File(coversDir, sanitizeFileName(entryName))
 
         if (!outFile.exists()) {
             val extractedFile = extractEntryToFile(mangaPath, outFile.path, entry.name)

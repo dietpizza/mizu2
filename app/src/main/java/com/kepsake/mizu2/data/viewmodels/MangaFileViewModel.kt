@@ -30,6 +30,24 @@ class MangaFileViewModel : ViewModel() {
         loadMangaFiles()
     }
 
+    fun batchAddMangaFiles(mangaFiles: List<MangaFile>) {
+        // Start a transaction for better performance with batch operations
+        mangaFileBox.store.runInTx {
+            val allManga = mangaFileBox.all
+            for (newFile in mangaFiles) {
+                val existing = allManga.find { it.path == newFile.path }
+                if (existing != null) {
+                    newFile.id = existing.id
+                }
+                mangaFileBox.put(newFile)
+            }
+        }
+
+        // Reload the list after the batch operation
+        loadMangaFiles()
+    }
+
+
     // Function to update an existing MangaFile
     fun updateMangaFile(mangaFile: MangaFile) {
         mangaFileBox.put(mangaFile)

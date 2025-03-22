@@ -31,7 +31,7 @@ suspend fun processMangaFiles(
                     val pageCount = getZipPageCount(path)
 
                     val manga = MangaFile(
-                        id = 1002,
+                        id = 0,
                         path = path,
                         name = zipFile.name,
                         cover_path = coverPath!!, // TODO handle null case
