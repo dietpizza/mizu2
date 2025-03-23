@@ -5,4 +5,4 @@
     android:layout_height="wrap_content"
     android:adjustViewBounds="false"
     android:background="?attr/colorSurfaceContainer"
-    android:scaleType="centerInside" />
+    android:scaleType="fitXY" />
