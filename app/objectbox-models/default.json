@@ -48,10 +48,41 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "2:6012366965575520631",
+      "lastPropertyId": "4:3844890247473581074",
+      "name": "MangaPanel",
+      "properties": [
+        {
+          "id": "1:7860427128583373057",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3821854964693780326",
+          "name": "manga_id",
+          "indexId": "2:4306732426106289588",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "3:7799171052885906753",
+          "name": "page_name",
+          "type": 9
+        },
+        {
+          "id": "4:3844890247473581074",
+          "name": "aspect_ratio",
+          "type": 7
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "1:3613979454179901133",
-  "lastIndexId": "1:4280946979253782908",
+  "lastEntityId": "2:6012366965575520631",
+  "lastIndexId": "2:4306732426106289588",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

@@ -9,7 +9,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:background="?attr/colorSurfaceContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
         <com.google.android.material.imageview.ShapeableImageView
             app:shapeAppearance="@style/RoundedImageView"
@@ -32,6 +32,7 @@
             android:textSize="14sp"
             android:maxLines="2"
             android:ellipsize="end"
+            android:gravity="bottom"
             app:layout_constraintTop_toBottomOf="@id/mangaCover"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

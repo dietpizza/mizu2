@@ -23,7 +23,7 @@ import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kepsake.mizu2.MizuApplication
 import com.kepsake.mizu2.R
-import com.kepsake.mizu2.adapters.MangaCardImageAdapter
+import com.kepsake.mizu2.adapters.MangaCardAdapter
 import com.kepsake.mizu2.constants.LibraryPath
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
@@ -44,8 +44,8 @@ val TAG = "MainActivity"
 class MainActivity : ComponentActivity() {
 
     private lateinit var mangaBox: Box<MangaFile>
-    private lateinit var mangaAdapter: MangaCardImageAdapter
-    private lateinit var mainBinding: ActivityMainBinding
+    private lateinit var mangaAdapter: MangaCardAdapter
+    private lateinit var binding: ActivityMainBinding
 
     private val mangaFileViewModel: MangaFileViewModel by viewModels()
 
@@ -76,11 +76,11 @@ class MainActivity : ComponentActivity() {
     fun initTopBar() {
         val heights = getSystemBarsHeight(this)
 
-        mainBinding.topBarLayout.setStatusBarForegroundColor(Color.TRANSPARENT)
-        mainBinding.topBarLayout.background?.apply { setTint(Color.TRANSPARENT) }
+        binding.topBarLayout.setStatusBarForegroundColor(Color.TRANSPARENT)
+        binding.topBarLayout.background?.apply { setTint(Color.TRANSPARENT) }
 
-        mainBinding.toolBar.updatePadding(top = mainBinding.toolBar.paddingTop + heights.statusBarHeight)
-        mainBinding.toolBar.setOnMenuItemClickListener { menuItem ->
+        binding.toolBar.updatePadding(top = binding.toolBar.paddingTop + heights.statusBarHeight)
+        binding.toolBar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.topMenuSort -> {
                     openSortDialog()
@@ -94,10 +94,10 @@ class MainActivity : ComponentActivity() {
     }
 
     fun initTopLoader() {
-        mainBinding.pullToRefresh.isEnabled = false
-        mainBinding.pullToRefresh.isRefreshing = false
+        binding.pullToRefresh.isEnabled = false
+        binding.pullToRefresh.isRefreshing = false
 
-        mainBinding.pullToRefresh.setColorSchemeColors(
+        binding.pullToRefresh.setColorSchemeColors(
             MaterialColors.getColor(
                 this,
                 com.google.android.material.R.attr.colorOnSurface,
@@ -105,7 +105,7 @@ class MainActivity : ComponentActivity() {
             ),
         )
 
-        mainBinding.pullToRefresh.setProgressBackgroundColorSchemeColor(
+        binding.pullToRefresh.setProgressBackgroundColorSchemeColor(
             MaterialColors.getColor(
                 this,
                 com.google.android.material.R.attr.colorSurfaceVariant,
@@ -119,23 +119,23 @@ class MainActivity : ComponentActivity() {
         val heights = getSystemBarsHeight(this)
 
         // Layout and data
-        mangaAdapter = MangaCardImageAdapter(emptyList(), {})
-        mainBinding.mangaList.layoutManager = layoutManager
-        mainBinding.mangaList.adapter = mangaAdapter
+        mangaAdapter = MangaCardAdapter(emptyList(), {})
+        binding.mangaList.layoutManager = layoutManager
+        binding.mangaList.adapter = mangaAdapter
 
         // styling
-        mainBinding.mangaList.setPadding(
-            mainBinding.mangaList.paddingLeft,
-            mainBinding.mangaList.paddingTop,
-            mainBinding.mangaList.paddingRight,
-            mainBinding.mangaList.paddingBottom + heights.navigationBarHeight
+        binding.mangaList.setPadding(
+            binding.mangaList.paddingLeft,
+            binding.mangaList.paddingTop,
+            binding.mangaList.paddingRight,
+            binding.mangaList.paddingBottom + heights.navigationBarHeight
         )
-        mainBinding.mangaList.clipToPadding = false
-        mainBinding.mangaList.addItemDecoration(GridSpacingItemDecoration(2, dpToPx(16f), false))
+        binding.mangaList.clipToPadding = false
+        binding.mangaList.addItemDecoration(GridSpacingItemDecoration(2, dpToPx(16f), false))
     }
 
     fun initGetDataView() {
-        mainBinding.selectFolderButton.setOnClickListener({
+        binding.selectFolderButton.setOnClickListener({
             openFolderPicker()
         })
     }
@@ -155,9 +155,9 @@ class MainActivity : ComponentActivity() {
         val isLibraryPathAvailable = libraryPath != null
 
 
-        if (!isLibraryPathAvailable && !mainBinding.pullToRefresh.isRefreshing) {
-            mainBinding.getDataLayout.visibility = View.VISIBLE
-            mainBinding.mangaList.visibility = View.GONE
+        if (!isLibraryPathAvailable && !binding.pullToRefresh.isRefreshing) {
+            binding.getDataLayout.visibility = View.VISIBLE
+            binding.mangaList.visibility = View.GONE
         }
 
         if (isLibraryPathAvailable && mangaList.isEmpty()) {
@@ -166,8 +166,8 @@ class MainActivity : ComponentActivity() {
         }
 
         if (isLibraryPathAvailable) {
-            mainBinding.getDataLayout.visibility = View.GONE
-            mainBinding.mangaList.visibility = View.VISIBLE
+            binding.getDataLayout.visibility = View.GONE
+            binding.mangaList.visibility = View.VISIBLE
         }
     }
 
@@ -178,13 +178,13 @@ class MainActivity : ComponentActivity() {
             Log.e(TAG, "syncLibrary: $libraryPath")
 
             if (libraryPath != null) {
-                mainBinding.pullToRefresh.isRefreshing = true
+                binding.pullToRefresh.isRefreshing = true
                 syncViewVisibility()
                 val mangas = processMangaFiles(this@MainActivity, libraryPath)
                 mangaFileViewModel.syncWithDisk(mangas)
 
                 // This is to avoid weird animation jumps
-                mainBinding.pullToRefresh.isRefreshing = false
+                binding.pullToRefresh.isRefreshing = false
                 syncViewVisibility()
             }
         }
@@ -259,8 +259,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        mainBinding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(mainBinding.root)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         // Ask for permission the first
         requestManageExternalStoragePermission()
 

@@ -12,10 +12,10 @@ import com.kepsake.mizu2.databinding.WidgetMangaCardBinding
 
 val TAG = "MangaCardImageAdapter"
 
-class MangaCardImageAdapter(
+class MangaCardAdapter(
     private var mangaList: List<MangaFile>,
     private val onItemClick: (MangaFile) -> Unit
-) : RecyclerView.Adapter<MangaCardImageAdapter.MangaCardImageViewHolder>() {
+) : RecyclerView.Adapter<MangaCardAdapter.MangaCardImageViewHolder>() {
 
     private var recyclerView: RecyclerView? = null
 
