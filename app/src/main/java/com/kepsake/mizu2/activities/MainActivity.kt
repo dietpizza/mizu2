@@ -8,29 +8,35 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.RadioGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kepsake.mizu2.MizuApplication
+import com.kepsake.mizu2.R
 import com.kepsake.mizu2.adapters.MangaCardImageAdapter
 import com.kepsake.mizu2.constants.LibraryPath
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
+import com.kepsake.mizu2.data.viewmodels.SortOption
+import com.kepsake.mizu2.data.viewmodels.SortOrder
 import com.kepsake.mizu2.databinding.ActivityMainBinding
 import com.kepsake.mizu2.ui.GridSpacingItemDecoration
 import com.kepsake.mizu2.utils.dpToPx
 import com.kepsake.mizu2.utils.getFilePathFromUri
 import com.kepsake.mizu2.utils.getSystemBarsHeight
 import com.kepsake.mizu2.utils.processMangaFiles
-import com.kepsake.mizu2.utils.setStatusBarColor
 import io.objectbox.Box
 import io.objectbox.kotlin.boxFor
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 val TAG = "MainActivity"
@@ -59,6 +65,7 @@ class MainActivity : ComponentActivity() {
         }
 
     fun init() {
+        initTopBar()
         initTopLoader()
         initGridView()
         initGetDataView()
@@ -66,14 +73,27 @@ class MainActivity : ComponentActivity() {
         syncLibrary()
     }
 
-    fun initTopLoader() {
+    fun initTopBar() {
         val heights = getSystemBarsHeight(this)
 
-        mainBinding.pullToRefresh.setProgressViewOffset(
-            true,
-            0,
-            heights.statusBarHeight + dpToPx(24f)
-        )
+        mainBinding.topBarLayout.setStatusBarForegroundColor(Color.TRANSPARENT)
+        mainBinding.topBarLayout.background?.apply { setTint(Color.TRANSPARENT) }
+
+        mainBinding.toolBar.updatePadding(top = mainBinding.toolBar.paddingTop + heights.statusBarHeight)
+        mainBinding.toolBar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.topMenuSort -> {
+                    openSortDialog()
+                    true
+                }
+
+                else -> false
+            }
+        }
+
+    }
+
+    fun initTopLoader() {
         mainBinding.pullToRefresh.isEnabled = false
         mainBinding.pullToRefresh.isRefreshing = false
 
@@ -96,7 +116,6 @@ class MainActivity : ComponentActivity() {
 
     fun initGridView() {
         val layoutManager = GridLayoutManager(this, 2)
-
         val heights = getSystemBarsHeight(this)
 
         // Layout and data
@@ -107,7 +126,7 @@ class MainActivity : ComponentActivity() {
         // styling
         mainBinding.mangaList.setPadding(
             mainBinding.mangaList.paddingLeft,
-            mainBinding.mangaList.paddingTop + heights.statusBarHeight,
+            mainBinding.mangaList.paddingTop,
             mainBinding.mangaList.paddingRight,
             mainBinding.mangaList.paddingBottom + heights.navigationBarHeight
         )
@@ -162,13 +181,9 @@ class MainActivity : ComponentActivity() {
                 mainBinding.pullToRefresh.isRefreshing = true
                 syncViewVisibility()
                 val mangas = processMangaFiles(this@MainActivity, libraryPath)
-                mangas.forEach {
-                    Log.e(TAG, "syncLibrary: $it")
-                }
                 mangaFileViewModel.batchAddMangaFiles(mangas)
 
                 // This is to avoid weird animation jumps
-                delay(200)
                 mainBinding.pullToRefresh.isRefreshing = false
                 syncViewVisibility()
             }
@@ -190,6 +205,55 @@ class MainActivity : ComponentActivity() {
         folderPickerLauncher.launch(intent)
     }
 
+    private fun openSortDialog() {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.widget_sort_dialog, null)
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogView)
+            .create()
+
+        val sortCriteriaGroup = dialogView.findViewById<RadioGroup>(R.id.sort_criteria)
+        val sortDirectionGroup = dialogView.findViewById<RadioGroup>(R.id.sort_direction)
+
+        val okButton = dialogView.findViewById<MaterialButton>(R.id.ok_button)
+        val cancelButton = dialogView.findViewById<MaterialButton>(R.id.cancel_button)
+
+        val sortCriteria = when (mangaFileViewModel.currentSortOption) {
+            SortOption.NAME -> R.id.sort_by_name
+            SortOption.SIZE -> R.id.sort_by_size
+            SortOption.LAST_MODIFIED -> R.id.sort_by_last_modified
+        }
+
+        val sortDirection = when (mangaFileViewModel.currentSortOrder) {
+            SortOrder.ASC -> R.id.sort_ascending
+            SortOrder.DESC -> R.id.sort_descending
+        }
+
+        sortCriteriaGroup.check(sortCriteria)
+        sortDirectionGroup.check(sortDirection)
+
+        okButton.setOnClickListener {
+            val selectedCriteria = sortCriteriaGroup.checkedRadioButtonId
+            val selectedDirection = sortDirectionGroup.checkedRadioButtonId
+            val isAscending = selectedDirection == R.id.sort_ascending
+
+            when (selectedCriteria) {
+                R.id.sort_by_name -> mangaFileViewModel.sortByName(isAscending)
+
+                R.id.sort_by_size -> mangaFileViewModel.sortBySize(isAscending)
+
+                R.id.sort_by_last_modified -> mangaFileViewModel.sortByLastModified(isAscending)
+            }
+
+            dialog.dismiss()
+        }
+
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -197,18 +261,15 @@ class MainActivity : ComponentActivity() {
 
         mainBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(mainBinding.root)
-
         // Ask for permission the first
         requestManageExternalStoragePermission()
-
-        setStatusBarColor()
 
         val boxStore = (application as MizuApplication).boxStore
         mangaBox = boxStore.boxFor()
         mangaFileViewModel.init(mangaBox)
         mangaFileViewModel.loadMangaFiles()
 
-        mainBinding.root.post { init() }
+        init()
     }
 
 }

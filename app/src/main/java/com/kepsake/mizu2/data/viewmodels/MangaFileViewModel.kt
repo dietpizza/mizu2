@@ -8,12 +8,14 @@ import com.kepsake.mizu2.logic.NaturalOrderComparator
 import io.objectbox.Box
 
 enum class SortOption {
-    NAME_ASC,
-    NAME_DESC,
-    LAST_MODIFIED_ASC,
-    LAST_MODIFIED_DESC,
-    SIZE_ASC,
-    SIZE_DESC
+    NAME,
+    LAST_MODIFIED,
+    SIZE
+}
+
+enum class SortOrder {
+    ASC,
+    DESC
 }
 
 class MangaFileViewModel : ViewModel() {
@@ -21,7 +23,11 @@ class MangaFileViewModel : ViewModel() {
     private lateinit var mangaFileBox: Box<MangaFile>
     private val naturalOrderComparator = NaturalOrderComparator()
 
-    private var currentSortOption = SortOption.NAME_ASC
+    private var _currentSortOption = SortOption.NAME
+    val currentSortOption: SortOption get() = _currentSortOption
+
+    private var _currentSortOrder = SortOrder.ASC
+    val currentSortOrder: SortOrder get() = _currentSortOrder
 
     private val _mangaFiles = MutableLiveData<List<MangaFile>>()
     val mangaFiles: LiveData<List<MangaFile>> get() = _mangaFiles
@@ -29,20 +35,17 @@ class MangaFileViewModel : ViewModel() {
     private val _mangaFile = MutableLiveData<MangaFile>()
     val mangaFile: LiveData<MangaFile> get() = _mangaFile
 
-    // Initialize the Box
     fun init(box: Box<MangaFile>) {
         mangaFileBox = box
         loadMangaFiles()
     }
 
-    // Function to add a new MangaFile
     fun addMangaFile(mangaFile: MangaFile) {
         mangaFileBox.put(mangaFile)
         loadMangaFiles()
     }
 
     fun batchAddMangaFiles(mangaFiles: List<MangaFile>) {
-        // Start a transaction for better performance with batch operations
         mangaFileBox.store.runInTx {
             val allManga = mangaFileBox.all
             for (newFile in mangaFiles) {
@@ -54,42 +57,57 @@ class MangaFileViewModel : ViewModel() {
             }
         }
 
-        // Reload the list after the batch operation
         loadMangaFiles()
     }
 
-    // Function to update an existing MangaFile
     fun updateMangaFile(mangaFile: MangaFile) {
         mangaFileBox.put(mangaFile)
         loadMangaFiles()
     }
 
-    // Function to delete a MangaFile
     fun deleteMangaFile(mangaFile: MangaFile) {
         mangaFileBox.remove(mangaFile)
         loadMangaFiles()
     }
 
-    // Function to change the sort option
-    fun setSortOption(sortOption: SortOption) {
-        if (currentSortOption != sortOption) {
-            currentSortOption = sortOption
-            loadMangaFiles()
-        }
+    fun getSortOption(): SortOption {
+        return _currentSortOption
     }
+
+    fun getSortOrder(): SortOrder {
+        return _currentSortOrder
+    }
+
 
     // Function to load all MangaFiles with current sort option applied
     fun loadMangaFiles() {
         val allFiles = mangaFileBox.all
 
-        // Apply sorting based on currentSortOption
-        val sortedFiles = when (currentSortOption) {
-            SortOption.NAME_ASC -> allFiles.sortedWith(compareBy(naturalOrderComparator) { it.name })
-            SortOption.NAME_DESC -> allFiles.sortedWith(compareByDescending(naturalOrderComparator) { it.name })
-            SortOption.LAST_MODIFIED_ASC -> allFiles.sortedBy { it.last_modified }
-            SortOption.LAST_MODIFIED_DESC -> allFiles.sortedByDescending { it.last_modified }
-            SortOption.SIZE_ASC -> allFiles.sortedBy { it.total_pages }
-            SortOption.SIZE_DESC -> allFiles.sortedByDescending { it.total_pages }
+        // Apply sorting based on currentSortOption and currentSortOrder
+        val sortedFiles = when (_currentSortOption) {
+            SortOption.NAME -> {
+                if (_currentSortOrder == SortOrder.ASC) {
+                    allFiles.sortedWith(compareBy(naturalOrderComparator) { it.name })
+                } else {
+                    allFiles.sortedWith(compareByDescending(naturalOrderComparator) { it.name })
+                }
+            }
+
+            SortOption.LAST_MODIFIED -> {
+                if (_currentSortOrder == SortOrder.ASC) {
+                    allFiles.sortedBy { it.last_modified }
+                } else {
+                    allFiles.sortedByDescending { it.last_modified }
+                }
+            }
+
+            SortOption.SIZE -> {
+                if (_currentSortOrder == SortOrder.ASC) {
+                    allFiles.sortedBy { it.total_pages }
+                } else {
+                    allFiles.sortedByDescending { it.total_pages }
+                }
+            }
         }
 
         _mangaFiles.value = sortedFiles
@@ -100,11 +118,22 @@ class MangaFileViewModel : ViewModel() {
         _mangaFile.value = mangaFileBox.get(id)
     }
 
-    // Convenience functions for each sort option
-    fun sortByNameAscending() = setSortOption(SortOption.NAME_ASC)
-    fun sortByNameDescending() = setSortOption(SortOption.NAME_DESC)
-    fun sortByLastModifiedAscending() = setSortOption(SortOption.LAST_MODIFIED_ASC)
-    fun sortByLastModifiedDescending() = setSortOption(SortOption.LAST_MODIFIED_DESC)
-    fun sortBySizeAscending() = setSortOption(SortOption.SIZE_ASC)
-    fun sortBySizeDescending() = setSortOption(SortOption.SIZE_DESC)
+    // Convenience functions for sorting
+    fun sortByName(ascending: Boolean = true) {
+        _currentSortOption = SortOption.NAME
+        _currentSortOrder = if (ascending) SortOrder.ASC else SortOrder.DESC
+        loadMangaFiles()
+    }
+
+    fun sortByLastModified(ascending: Boolean = true) {
+        _currentSortOption = SortOption.LAST_MODIFIED
+        _currentSortOrder = if (ascending) SortOrder.ASC else SortOrder.DESC
+        loadMangaFiles()
+    }
+
+    fun sortBySize(ascending: Boolean = true) {
+        _currentSortOption = SortOption.SIZE
+        _currentSortOrder = if (ascending) SortOrder.ASC else SortOrder.DESC
+        loadMangaFiles()
+    }
 }

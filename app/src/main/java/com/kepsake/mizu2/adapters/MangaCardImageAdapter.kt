@@ -15,8 +15,14 @@ val TAG = "MangaCardImageAdapter"
 class MangaCardImageAdapter(
     private var mangaList: List<MangaFile>,
     private val onItemClick: (MangaFile) -> Unit
-) :
-    RecyclerView.Adapter<MangaCardImageAdapter.MangaCardImageViewHolder>() {
+) : RecyclerView.Adapter<MangaCardImageAdapter.MangaCardImageViewHolder>() {
+
+    private var recyclerView: RecyclerView? = null
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        this.recyclerView = recyclerView // Store reference to the RecyclerView
+    }
 
     fun updateData(newData: List<MangaFile>) {
         val diffCallback = MangaDiffCallback(mangaList, newData)
@@ -25,6 +31,9 @@ class MangaCardImageAdapter(
         Log.e(TAG, "updateData: $newData")
         mangaList = newData
         diffResult.dispatchUpdatesTo(this)
+
+        // Scroll to top after data update
+        recyclerView?.scrollToPosition(0)
     }
 
     class MangaCardImageViewHolder(val binding: WidgetMangaCardBinding) :
