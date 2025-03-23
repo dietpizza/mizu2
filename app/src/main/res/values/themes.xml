@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Mizu2" parent="Theme.Material3.DayNight">
+    <style name="Theme.Mizu2" parent="Theme.Material3.DynamicColors.DayNight">
         <!-- Enable Dynamic Colors -->
         <item name="android:forceDarkAllowed">true</item>
 
