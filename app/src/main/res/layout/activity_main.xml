@@ -17,7 +17,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="?attr/actionBarSize"
+            android:layout_marginRight="6dp"
             app:title="Library"
+            app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline5"
             app:layout_scrollFlags="scroll|enterAlways"
             app:menu="@menu/top_app_bar" />
 

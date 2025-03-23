@@ -40,42 +40,35 @@ class MangaFileViewModel : ViewModel() {
         loadMangaFiles()
     }
 
-    fun addMangaFile(mangaFile: MangaFile) {
-        mangaFileBox.put(mangaFile)
-        loadMangaFiles()
+    fun loadMangaFileById(id: Long) {
+        _mangaFile.value = mangaFileBox.get(id)
     }
 
-    fun batchAddMangaFiles(mangaFiles: List<MangaFile>) {
+    fun syncWithDisk(filesOnDisk: List<MangaFile>) {
         mangaFileBox.store.runInTx {
-            val allManga = mangaFileBox.all
-            for (newFile in mangaFiles) {
-                val existing = allManga.find { it.path == newFile.path }
-                if (existing != null) {
-                    newFile.id = existing.id
-                }
-                mangaFileBox.put(newFile)
+            val filesInDb = mangaFileBox.all
+
+            val filesToBeAddedOrUpdated = filesOnDisk.map { fileOnDisk ->
+                val existing = filesInDb.find { it.path == fileOnDisk.path }
+                if (existing != null) fileOnDisk.id = existing.id
+
+                return@map fileOnDisk
             }
+
+            val filesToBeDeleted = filesInDb.mapNotNull { manga ->
+                val fileOnDisk = filesOnDisk.find { it.path == manga.path }
+
+                if (fileOnDisk == null) {
+                    return@mapNotNull manga
+                }
+                null
+            }
+
+            mangaFileBox.putBatched(filesToBeAddedOrUpdated, 20)
+            mangaFileBox.remove(filesToBeDeleted)
         }
 
         loadMangaFiles()
-    }
-
-    fun updateMangaFile(mangaFile: MangaFile) {
-        mangaFileBox.put(mangaFile)
-        loadMangaFiles()
-    }
-
-    fun deleteMangaFile(mangaFile: MangaFile) {
-        mangaFileBox.remove(mangaFile)
-        loadMangaFiles()
-    }
-
-    fun getSortOption(): SortOption {
-        return _currentSortOption
-    }
-
-    fun getSortOrder(): SortOrder {
-        return _currentSortOrder
     }
 
 
@@ -113,12 +106,7 @@ class MangaFileViewModel : ViewModel() {
         _mangaFiles.value = sortedFiles
     }
 
-    // Function to load a specific MangaFile by ID
-    fun loadMangaFileById(id: Long) {
-        _mangaFile.value = mangaFileBox.get(id)
-    }
-
-    // Convenience functions for sorting
+    // Sorting
     fun sortByName(ascending: Boolean = true) {
         _currentSortOption = SortOption.NAME
         _currentSortOrder = if (ascending) SortOrder.ASC else SortOrder.DESC

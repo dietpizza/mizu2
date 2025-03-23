@@ -4,5 +4,6 @@
     <style name="Theme.Mizu2" parent="Theme.Material3.DayNight">
         <!-- Enable Dynamic Colors -->
         <item name="android:forceDarkAllowed">true</item>
+
     </style>
 </resources>

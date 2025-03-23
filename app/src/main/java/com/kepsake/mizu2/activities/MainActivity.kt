@@ -181,7 +181,7 @@ class MainActivity : ComponentActivity() {
                 mainBinding.pullToRefresh.isRefreshing = true
                 syncViewVisibility()
                 val mangas = processMangaFiles(this@MainActivity, libraryPath)
-                mangaFileViewModel.batchAddMangaFiles(mangas)
+                mangaFileViewModel.syncWithDisk(mangas)
 
                 // This is to avoid weird animation jumps
                 mainBinding.pullToRefresh.isRefreshing = false
