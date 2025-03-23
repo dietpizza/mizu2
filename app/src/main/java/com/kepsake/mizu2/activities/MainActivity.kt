@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.RadioGroup
@@ -39,9 +38,9 @@ import io.objectbox.Box
 import io.objectbox.kotlin.boxFor
 import kotlinx.coroutines.launch
 
-val TAG = "MainActivity"
 
 class MainActivity : ComponentActivity() {
+    val TAG = "MainActivity"
 
     private lateinit var mangaBox: Box<MangaFile>
     private lateinit var mangaAdapter: MangaCardAdapter
@@ -115,23 +114,26 @@ class MainActivity : ComponentActivity() {
     }
 
     fun initGridView() {
-        val layoutManager = GridLayoutManager(this, 2)
+        val mangaLayoutManager = GridLayoutManager(this, 2)
         val heights = getSystemBarsHeight(this)
 
         // Layout and data
-        mangaAdapter = MangaCardAdapter(emptyList(), {})
-        binding.mangaList.layoutManager = layoutManager
-        binding.mangaList.adapter = mangaAdapter
+        mangaAdapter = MangaCardAdapter(emptyList(), { openMangaReader(it) })
 
-        // styling
-        binding.mangaList.setPadding(
-            binding.mangaList.paddingLeft,
-            binding.mangaList.paddingTop,
-            binding.mangaList.paddingRight,
-            binding.mangaList.paddingBottom + heights.navigationBarHeight
-        )
-        binding.mangaList.clipToPadding = false
-        binding.mangaList.addItemDecoration(GridSpacingItemDecoration(2, dpToPx(16f), false))
+        binding.mangaList.apply {
+            layoutManager = mangaLayoutManager
+            adapter = mangaAdapter
+            clipToPadding = false
+
+
+            setHasFixedSize(true)
+            addItemDecoration(
+                GridSpacingItemDecoration(2, 16.dpToPx(), false)
+            )
+            updatePadding(
+                bottom = heights.navigationBarHeight
+            )
+        }
     }
 
     fun initGetDataView() {
@@ -142,7 +144,6 @@ class MainActivity : ComponentActivity() {
 
     fun observeMangaData() {
         mangaFileViewModel.mangaFiles.observe(this, {
-            Log.e(TAG, "observeMangaData: $it")
             mangaAdapter.updateData(it)
             syncViewVisibility()
         })
@@ -161,7 +162,6 @@ class MainActivity : ComponentActivity() {
         }
 
         if (isLibraryPathAvailable && mangaList.isEmpty()) {
-            Log.e(TAG, "syncViewVisibility: 2")
             // TODO show change folder ui
         }
 
@@ -175,7 +175,6 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val sharedPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             val libraryPath = sharedPrefs.getString(LibraryPath, null)
-            Log.e(TAG, "syncLibrary: $libraryPath")
 
             if (libraryPath != null) {
                 binding.pullToRefresh.isRefreshing = true
@@ -252,6 +251,12 @@ class MainActivity : ComponentActivity() {
         }
 
         dialog.show()
+    }
+
+    fun openMangaReader(manga: MangaFile) {
+        val intent = Intent(this, MangaReaderActivity::class.java)
+        intent.putExtra("id", manga.id)
+        this.startActivity(intent)
     }
 
 

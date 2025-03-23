@@ -156,6 +156,22 @@ class MangaFileViewModel : ViewModel() {
         loadMangaFiles()
     }
 
+    fun updateCurrentPage(id: Long, page: Int) {
+        silentUpdateCurrentPage(id, page)
+        loadMangaFileById(id)
+
+    }
+
+    fun silentUpdateCurrentPage(id: Long, page: Int) {
+        val _newEntry = mangaFile.value
+
+        if (_newEntry != null) {
+            _newEntry.current_page = page
+            mangaFileBox.put(_newEntry)
+        }
+
+    }
+
     fun setSortOption(option: SortOption) {
         if (_currentSortOption != option) {
             _currentSortOption = option

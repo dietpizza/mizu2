@@ -1,10 +1,7 @@
 package com.kepsake.mizu2.utils
 
-import android.content.Context
-import android.util.TypedValue
+import android.content.res.Resources
 
-fun Context.dpToPx(dp: Float): Int {
-    return TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP, dp, resources.displayMetrics
-    ).toInt()
+fun Int.dpToPx(): Int {
+    return (this * Resources.getSystem().displayMetrics.density).toInt()
 }

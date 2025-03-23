@@ -1,6 +1,5 @@
 package com.kepsake.mizu2.adapters
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -28,7 +27,6 @@ class MangaCardAdapter(
         val diffCallback = MangaDiffCallback(mangaList, newData)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
 
-        Log.e(TAG, "updateData: $newData")
         mangaList = newData
         diffResult.dispatchUpdatesTo(this)
 

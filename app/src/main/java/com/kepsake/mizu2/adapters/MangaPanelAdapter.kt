@@ -2,7 +2,6 @@ package com.kepsake.mizu2.adapters
 
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -18,7 +17,7 @@ import kotlinx.coroutines.withContext
 
 class MangaPanelAdapter(
     private val manga: MangaFile,
-    private val mangaPages: List<MangaPanel>,
+    private var mangaPanels: List<MangaPanel>,
 ) : RecyclerView.Adapter<MangaPanelAdapter.MangaViewHolder>() {
 
     private val screenWidth = Resources.getSystem().displayMetrics.widthPixels
@@ -27,6 +26,11 @@ class MangaPanelAdapter(
     class MangaViewHolder(val binding: WidgetMangaPanelBinding) :
         RecyclerView.ViewHolder(binding.root)
 
+    fun updateData(newData: List<MangaPanel>) {
+        mangaPanels = newData
+        this.notifyDataSetChanged()
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MangaViewHolder {
         val binding =
             WidgetMangaPanelBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -34,16 +38,12 @@ class MangaPanelAdapter(
     }
 
     override fun onBindViewHolder(holder: MangaViewHolder, position: Int) {
-        val page = mangaPages[position]
+        val page = mangaPanels[position]
         val imageHeight = (screenWidth / page.aspect_ratio).toInt()
-        val pageKey = mangaPages[position].page_name
+        val pageKey = mangaPanels[position].page_name
 
         holder.binding.mangaPanel.layoutParams.height = imageHeight
         holder.binding.mangaPanel.requestLayout()
-
-        if (pageCache[pageKey] != null) {
-            Log.e("ROHAN", "onBindViewHolder: Cache Hit!")
-        }
 
         CoroutineScope(Dispatchers.Main).launch {
             val bitmap = pageCache[pageKey] ?: withContext(Dispatchers.IO) {
@@ -60,7 +60,8 @@ class MangaPanelAdapter(
                 }
             }
         }
+
     }
 
-    override fun getItemCount() = mangaPages.size
+    override fun getItemCount() = mangaPanels.size
 }

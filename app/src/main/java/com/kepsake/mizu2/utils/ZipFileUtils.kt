@@ -34,11 +34,9 @@ fun extractEntryToFile(
                 if (outFile.exists() && outFile.length() > 0) {
                     return outFile
                 } else {
-                    Log.e("MangaView", "Failed to extract: $entryName (Empty file)")
                     null
                 }
             } else {
-                Log.e("MangaView", "Entry not found or is directory: $entryName")
                 null
             }
         }
@@ -62,7 +60,7 @@ fun getZipFileEntries(zipFilePath: String): List<ZipEntry> {
             return entries
         }
     } catch (e: Exception) {
-        Log.e("MangaView", "Error reading zip file", e)
+        Log.e(TAG, "Error reading zip file", e)
     }
 
     // Sort entries by name for correct order
