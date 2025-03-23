@@ -124,4 +124,14 @@ class MangaFileViewModel : ViewModel() {
         _currentSortOrder = if (ascending) SortOrder.ASC else SortOrder.DESC
         loadMangaFiles()
     }
+
+    fun setSortOption(option: SortOption) {
+        if (_currentSortOption != option)
+            _currentSortOption = option
+    }
+
+    fun setSortOrder(order: SortOrder) {
+        if (_currentSortOrder != order)
+            _currentSortOrder = order
+    }
 }
