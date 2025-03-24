@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.RadioGroup
 import androidx.core.view.updatePadding
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.color.MaterialColors
@@ -21,11 +22,14 @@ import com.kepsake.mizu2.databinding.ActivityMainBinding
 import com.kepsake.mizu2.ui.GridSpacingItemDecoration
 import com.kepsake.mizu2.utils.dpToPx
 import com.kepsake.mizu2.utils.getSystemBarsHeight
+import com.kepsake.mizu2.utils.processMangaFiles
+import kotlinx.coroutines.launch
 
 class MainActivityUIHelper(
     private val activity: MainActivity,
     private val binding: ActivityMainBinding,
-    private val viewModel: MangaFileViewModel
+    private val vMangaFile: MangaFileViewModel,
+    private val lifecycleScope: LifecycleCoroutineScope
 ) {
     private lateinit var mangaAdapter: MangaCardAdapter
 
@@ -100,14 +104,14 @@ class MainActivityUIHelper(
     }
 
     fun observeMangaData() {
-        viewModel.mangaFiles.observe(activity) {
+        vMangaFile.mangaFiles.observe(activity) {
             mangaAdapter.updateData(it)
             syncViewVisibility()
         }
     }
 
     fun syncViewVisibility() {
-        val mangaList = viewModel.mangaFiles.value ?: emptyList()
+        val mangaList = vMangaFile.mangaFiles.value ?: emptyList()
         val sharedPrefs = activity.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val libraryPath = sharedPrefs.getString(LibraryPath, null)
         val isLibraryPathAvailable = libraryPath != null
@@ -139,13 +143,13 @@ class MainActivityUIHelper(
         val okButton = dialogView.findViewById<MaterialButton>(R.id.ok_button)
         val cancelButton = dialogView.findViewById<MaterialButton>(R.id.cancel_button)
 
-        val sortCriteria = when (viewModel.currentSortOption) {
+        val sortCriteria = when (vMangaFile.currentSortOption) {
             SortOption.NAME -> R.id.sort_by_name
             SortOption.SIZE -> R.id.sort_by_size
             SortOption.LAST_MODIFIED -> R.id.sort_by_last_modified
         }
 
-        val sortDirection = when (viewModel.currentSortOrder) {
+        val sortDirection = when (vMangaFile.currentSortOrder) {
             SortOrder.ASC -> R.id.sort_ascending
             SortOrder.DESC -> R.id.sort_descending
         }
@@ -159,9 +163,9 @@ class MainActivityUIHelper(
             val isAscending = selectedDirection == R.id.sort_ascending
 
             when (selectedCriteria) {
-                R.id.sort_by_name -> viewModel.sortByName(isAscending)
-                R.id.sort_by_size -> viewModel.sortBySize(isAscending)
-                R.id.sort_by_last_modified -> viewModel.sortByLastModified(isAscending)
+                R.id.sort_by_name -> vMangaFile.sortByName(isAscending)
+                R.id.sort_by_size -> vMangaFile.sortBySize(isAscending)
+                R.id.sort_by_last_modified -> vMangaFile.sortByLastModified(isAscending)
             }
 
             dialog.dismiss()
@@ -173,4 +177,23 @@ class MainActivityUIHelper(
 
         dialog.show()
     }
+
+    fun syncLibrary() {
+        lifecycleScope.launch {
+            val sharedPrefs = activity.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            val libraryPath = sharedPrefs.getString(LibraryPath, null)
+
+            if (libraryPath != null) {
+                binding.pullToRefresh.isRefreshing = true
+                syncViewVisibility()
+                val mangas = processMangaFiles(activity, libraryPath)
+                vMangaFile.syncWithDisk(mangas)
+
+                // This is to avoid weird animation jumps
+                binding.pullToRefresh.isRefreshing = false
+                syncViewVisibility()
+            }
+        }
+    }
+
 }

@@ -18,10 +18,8 @@ import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.databinding.ActivityMainBinding
 import com.kepsake.mizu2.helpers.MainActivityUIHelper
 import com.kepsake.mizu2.utils.getFilePathFromUri
-import com.kepsake.mizu2.utils.processMangaFiles
 import io.objectbox.Box
 import io.objectbox.kotlin.boxFor
-import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -31,7 +29,14 @@ class MainActivity : ComponentActivity() {
     private lateinit var binding: ActivityMainBinding
 
     private val mangaFileViewModel: MangaFileViewModel by viewModels()
-    private val uiHelper by lazy { MainActivityUIHelper(this, binding, mangaFileViewModel) }
+    private val uiHelper by lazy {
+        MainActivityUIHelper(
+            this,
+            binding,
+            mangaFileViewModel,
+            lifecycleScope
+        )
+    }
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
@@ -44,7 +49,7 @@ class MainActivity : ComponentActivity() {
                     val libraryPath = getFilePathFromUri(this, uri)
 
                     sharedPrefs.edit().putString(LibraryPath, libraryPath).apply()
-                    syncLibrary()
+                    uiHelper.syncLibrary()
                 }
             }
         }
@@ -56,11 +61,11 @@ class MainActivity : ComponentActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Ask for permission first
         requestManageExternalStoragePermission()
 
         val boxStore = (application as MizuApplication).boxStore
         mangaBox = boxStore.boxFor()
+
         mangaFileViewModel.init(mangaBox, this)
         mangaFileViewModel.loadMangaFiles()
 
@@ -73,7 +78,7 @@ class MainActivity : ComponentActivity() {
         uiHelper.initGridView()
         uiHelper.initGetDataView()
         uiHelper.observeMangaData()
-        syncLibrary()
+        uiHelper.syncLibrary()
     }
 
     private fun requestManageExternalStoragePermission() {
@@ -89,24 +94,6 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         intent.addCategory(Intent.CATEGORY_DEFAULT)
         folderPickerLauncher.launch(intent)
-    }
-
-    fun syncLibrary() {
-        lifecycleScope.launch {
-            val sharedPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            val libraryPath = sharedPrefs.getString(LibraryPath, null)
-
-            if (libraryPath != null) {
-                binding.pullToRefresh.isRefreshing = true
-                uiHelper.syncViewVisibility()
-                val mangas = processMangaFiles(this@MainActivity, libraryPath)
-                mangaFileViewModel.syncWithDisk(mangas)
-
-                // This is to avoid weird animation jumps
-                binding.pullToRefresh.isRefreshing = false
-                uiHelper.syncViewVisibility()
-            }
-        }
     }
 
     fun openMangaReader(manga: MangaFile) {
