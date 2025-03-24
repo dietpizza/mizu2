@@ -79,7 +79,7 @@ class MangaReaderUIHelper(
                 currentPage = firstVisibleItemPosition
 
                 vMangaFile.mangaFile.value?.let {
-//                    vMangaFile.silentUpdateCurrentPage(it.id, currentPage)
+                    vMangaFile.silentUpdateCurrentPage(it.id, currentPage)
                 }
             }
         }

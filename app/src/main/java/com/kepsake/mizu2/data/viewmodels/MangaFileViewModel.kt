@@ -115,28 +115,23 @@ class MangaFileViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun updateCurrentPage(id: Long, page: Int) {
+    fun silentUpdateCurrentPage(id: Long, page: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val manga = mangaFileDao.getById(id)
             if (manga != null) {
                 manga.current_page = page
                 mangaFileDao.insertOrUpdate(manga)
-                _mangaFile.postValue(manga)
             }
         }
     }
 
-    fun setSortOption(option: SortOption) {
+    fun setSortInfo(option: SortOption, isAscending: Boolean) {
         if (_currentSortOption != option) {
             _currentSortOption = option
-            saveSortPreferences()
         }
-    }
+        _currentSortOrder = if (isAscending) SortOrder.ASC else SortOrder.DESC
 
-    fun setSortOrder(order: SortOrder) {
-        if (_currentSortOrder != order) {
-            _currentSortOrder = order
-            saveSortPreferences()
-        }
+        loadMangaFiles()
+        saveSortPreferences()
     }
 }
