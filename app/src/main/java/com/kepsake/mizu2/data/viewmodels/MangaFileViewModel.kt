@@ -1,13 +1,17 @@
 package com.kepsake.mizu2.data.viewmodels
 
+import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.kepsake.mizu2.data.MangaDatabase
 import com.kepsake.mizu2.data.models.MangaFile
+import com.kepsake.mizu2.data.models.MangaFileDao
 import com.kepsake.mizu2.logic.NaturalOrderComparator
-import io.objectbox.Box
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 enum class SortOption {
     NAME,
@@ -20,13 +24,12 @@ enum class SortOrder {
     DESC
 }
 
-class MangaFileViewModel : ViewModel() {
-
-    private lateinit var mangaFileBox: Box<MangaFile>
-    private lateinit var sharedPreferences: SharedPreferences
+class MangaFileViewModel(application: Application) : AndroidViewModel(application) {
+    private val mangaFileDao: MangaFileDao = MangaDatabase.getDatabase(application).mangaFileDao()
+    private val sharedPreferences =
+        application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val naturalOrderComparator = NaturalOrderComparator()
 
-    // Constants for SharedPreferences keys
     companion object {
         private const val PREFS_NAME = "manga_file_preferences"
         private const val KEY_SORT_OPTION = "sort_option"
@@ -42,14 +45,10 @@ class MangaFileViewModel : ViewModel() {
     private val _mangaFiles = MutableLiveData<List<MangaFile>>()
     val mangaFiles: LiveData<List<MangaFile>> get() = _mangaFiles
 
-    private val _mangaFile = MutableLiveData<MangaFile>()
-    val mangaFile: LiveData<MangaFile> get() = _mangaFile
+    private val _mangaFile = MutableLiveData<MangaFile?>()
+    val mangaFile: MutableLiveData<MangaFile?> get() = _mangaFile
 
-    fun init(box: Box<MangaFile>, context: Context) {
-        mangaFileBox = box
-        sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-        // Load sort preferences from SharedPreferences
+    init {
         loadSortPreferences()
         loadMangaFiles()
     }
@@ -70,106 +69,61 @@ class MangaFileViewModel : ViewModel() {
     }
 
     fun loadMangaFileById(id: Long) {
-        _mangaFile.value = mangaFileBox.get(id)
+        viewModelScope.launch(Dispatchers.IO) {
+            _mangaFile.postValue(mangaFileDao.getById(id))
+        }
     }
 
     fun syncWithDisk(filesOnDisk: List<MangaFile>) {
-        mangaFileBox.store.runInTx {
-            val filesInDb = mangaFileBox.all
-
+        viewModelScope.launch(Dispatchers.IO) {
+            val filesInDb = mangaFileDao.getAll()
             val filesToBeAddedOrUpdated = filesOnDisk.map { fileOnDisk ->
                 val existing = filesInDb.find { it.path == fileOnDisk.path }
                 if (existing != null) fileOnDisk.id = existing.id
-
-                return@map fileOnDisk
+                fileOnDisk
             }
 
-            val filesToBeDeleted = filesInDb.mapNotNull { manga ->
-                val fileOnDisk = filesOnDisk.find { it.path == manga.path }
-
-                if (fileOnDisk == null) {
-                    return@mapNotNull manga
-                }
-                null
-            }
-
-            mangaFileBox.putBatched(filesToBeAddedOrUpdated, 20)
-            mangaFileBox.remove(filesToBeDeleted)
+            mangaFileDao.insertOrUpdateAll(filesToBeAddedOrUpdated)
+            loadMangaFiles()
         }
-
-        loadMangaFiles()
     }
 
-    // Function to load all MangaFiles with current sort option applied
     fun loadMangaFiles() {
-        val allFiles = mangaFileBox.all
+        viewModelScope.launch(Dispatchers.IO) {
+            val allFiles = mangaFileDao.getAll()
 
-        // Apply sorting based on currentSortOption and currentSortOrder
-        val sortedFiles = when (_currentSortOption) {
-            SortOption.NAME -> {
-                if (_currentSortOrder == SortOrder.ASC) {
+            val sortedFiles = when (_currentSortOption) {
+                SortOption.NAME -> if (_currentSortOrder == SortOrder.ASC) {
                     allFiles.sortedWith(compareBy(naturalOrderComparator) { it.name })
                 } else {
                     allFiles.sortedWith(compareByDescending(naturalOrderComparator) { it.name })
                 }
-            }
 
-            SortOption.LAST_MODIFIED -> {
-                if (_currentSortOrder == SortOrder.ASC) {
+                SortOption.LAST_MODIFIED -> if (_currentSortOrder == SortOrder.ASC) {
                     allFiles.sortedBy { it.last_modified }
                 } else {
                     allFiles.sortedByDescending { it.last_modified }
                 }
-            }
 
-            SortOption.SIZE -> {
-                if (_currentSortOrder == SortOrder.ASC) {
+                SortOption.SIZE -> if (_currentSortOrder == SortOrder.ASC) {
                     allFiles.sortedBy { it.total_pages }
                 } else {
                     allFiles.sortedByDescending { it.total_pages }
                 }
             }
+            _mangaFiles.postValue(sortedFiles)
         }
-
-        _mangaFiles.value = sortedFiles
-    }
-
-    // Sorting
-    fun sortByName(ascending: Boolean = true) {
-        _currentSortOption = SortOption.NAME
-        _currentSortOrder = if (ascending) SortOrder.ASC else SortOrder.DESC
-        saveSortPreferences()
-        loadMangaFiles()
-    }
-
-    fun sortByLastModified(ascending: Boolean = true) {
-        _currentSortOption = SortOption.LAST_MODIFIED
-        _currentSortOrder = if (ascending) SortOrder.ASC else SortOrder.DESC
-        saveSortPreferences()
-        loadMangaFiles()
-    }
-
-    fun sortBySize(ascending: Boolean = true) {
-        _currentSortOption = SortOption.SIZE
-        _currentSortOrder = if (ascending) SortOrder.ASC else SortOrder.DESC
-        saveSortPreferences()
-        loadMangaFiles()
     }
 
     fun updateCurrentPage(id: Long, page: Int) {
-        silentUpdateCurrentPage(id, page)
-        loadMangaFileById(id)
-
-    }
-
-    fun silentUpdateCurrentPage(id: Long, page: Int) {
-        val _newEntry = mangaFile.value
-
-        if (_newEntry != null) {
-            _newEntry.current_page = page
-            mangaFileBox.put(_newEntry)
+        viewModelScope.launch(Dispatchers.IO) {
+            val manga = mangaFileDao.getById(id)
+            if (manga != null) {
+                manga.current_page = page
+                mangaFileDao.insertOrUpdate(manga)
+                _mangaFile.postValue(manga)
+            }
         }
-
     }
 
     fun setSortOption(option: SortOption) {

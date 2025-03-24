@@ -162,11 +162,11 @@ class MainActivityUIHelper(
             val selectedDirection = sortDirectionGroup.checkedRadioButtonId
             val isAscending = selectedDirection == R.id.sort_ascending
 
-            when (selectedCriteria) {
-                R.id.sort_by_name -> vMangaFile.sortByName(isAscending)
-                R.id.sort_by_size -> vMangaFile.sortBySize(isAscending)
-                R.id.sort_by_last_modified -> vMangaFile.sortByLastModified(isAscending)
-            }
+//            when (selectedCriteria) {
+//                R.id.sort_by_name -> vMangaFile.sortByName(isAscending)
+//                R.id.sort_by_size -> vMangaFile.sortBySize(isAscending)
+//                R.id.sort_by_last_modified -> vMangaFile.sortByLastModified(isAscending)
+//            }
 
             dialog.dismiss()
         }

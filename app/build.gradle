@@ -3,8 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-parcelize")
-    id("kotlin-kapt") // Only for Kotlin projects
-    id("io.objectbox") // Apply last
+    id("kotlin-kapt")
+    id 'com.google.devtools.ksp' version '2.0.21-1.0.27' // Use latest version
 }
 
 android {
@@ -56,4 +56,9 @@ dependencies {
     implementation libs.coil.kt.coil.compose
     implementation libs.objectbox.android
     implementation libs.objectbox.kotlin
+
+    implementation libs.androidx.room.runtime
+    implementation libs.androidx.room.ktx
+    ksp libs.androidx.room.compiler
+
 }

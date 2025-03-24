@@ -65,7 +65,6 @@ class MangaReaderActivity : ComponentActivity() {
         mangaFileBox = boxStore.boxFor()
         mangaPanelBox = boxStore.boxFor()
 
-        vMangaFile.init(mangaFileBox, this)
         vMangaFile.loadMangaFileById(mangaId)
 
         initializeApp()
@@ -78,7 +77,6 @@ class MangaReaderActivity : ComponentActivity() {
 
     private fun setupObservers() {
         vMangaFile.mangaFile.observe(this) {
-            vMangaPanel.init(mangaPanelBox)
             vMangaPanel.loadPagesForManga(mangaId)
 
             uiSetup.initReader()

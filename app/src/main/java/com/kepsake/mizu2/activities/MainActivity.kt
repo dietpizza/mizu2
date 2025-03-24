@@ -66,7 +66,6 @@ class MainActivity : ComponentActivity() {
         val boxStore = (application as MizuApplication).boxStore
         mangaBox = boxStore.boxFor()
 
-        mangaFileViewModel.init(mangaBox, this)
         mangaFileViewModel.loadMangaFiles()
 
         initializeUI()
