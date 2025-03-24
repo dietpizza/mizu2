@@ -7,6 +7,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.slider.Slider
 import com.kepsake.mizu2.activities.MangaReaderActivity
 import com.kepsake.mizu2.adapters.MangaPanelAdapter
 import com.kepsake.mizu2.data.models.MangaFile
@@ -35,6 +36,32 @@ class MangaReaderUIHelper(
     private val lifecycleScope: LifecycleCoroutineScope
 ) {
     private lateinit var mangaPanelAdapter: MangaPanelAdapter
+
+    fun initSlider(max: Int) {
+        val heights = getSystemBarsHeight(activity)
+
+//        binding.bottomToolBar.apply {
+//            val params = layoutParams as ViewGroup.MarginLayoutParams
+//            params.updateMargins(bottom = heights.navigationBarHeight)
+//            layoutParams = params
+//        }
+//
+        binding.pageSlider.apply {
+            value = 0f
+            valueFrom = 0f
+            valueTo = max.toFloat()
+            stepSize = 1f
+
+        }
+        binding.pageSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            // No-op here, have to override both
+            override fun onStartTrackingTouch(slider: Slider) {}
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                binding.mangaReader.scrollToPosition(slider.value.toInt())
+            }
+        })
+    }
 
     fun initReader() {
         vMangaFile.mangaFile.value?.let { manga ->
