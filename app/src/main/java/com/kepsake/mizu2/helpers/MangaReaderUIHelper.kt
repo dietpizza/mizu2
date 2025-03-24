@@ -1,6 +1,7 @@
 package com.kepsake.mizu2.helpers
 
 import android.animation.ObjectAnimator
+import android.util.Log
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.core.view.updatePadding
@@ -35,6 +36,7 @@ class MangaReaderUIHelper(
     private val vMangaPanel: MangaPanelViewModel,
     private val lifecycleScope: LifecycleCoroutineScope
 ) {
+    private val TAG = "MangaReaderUIHelper"
     private lateinit var mangaPanelAdapter: MangaPanelAdapter
 
     fun initSlider(max: Int) {
@@ -102,9 +104,11 @@ class MangaReaderUIHelper(
 
             if (firstVisibleItemPosition >= 0 && firstVisibleItemPosition != currentPage) {
                 currentPage = firstVisibleItemPosition
+                Log.e(TAG, "onScrolled: $currentPage")
 
                 vMangaFile.mangaFile.value?.let {
                     vMangaFile.silentUpdateCurrentPage(it.id, currentPage)
+                    binding.pageSlider.value = currentPage.toFloat()
                 }
             }
         }
