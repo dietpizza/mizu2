@@ -38,29 +38,27 @@ class MangaReaderUIHelper(
     private lateinit var mangaPanelAdapter: MangaPanelAdapter
 
     fun initSlider(max: Int) {
-        val heights = getSystemBarsHeight(activity)
+        val currentPage = vMangaFile.mangaFile.value?.current_page ?: 0
 
-//        binding.bottomToolBar.apply {
-//            val params = layoutParams as ViewGroup.MarginLayoutParams
-//            params.updateMargins(bottom = heights.navigationBarHeight)
-//            layoutParams = params
-//        }
-//
+        binding.bottomAppBar.apply {
+            visibility = View.VISIBLE
+        }
+
         binding.pageSlider.apply {
-            value = 0f
+            value = currentPage.toFloat()
             valueFrom = 0f
             valueTo = max.toFloat()
             stepSize = 1f
 
-        }
-        binding.pageSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-            // No-op here, have to override both
-            override fun onStartTrackingTouch(slider: Slider) {}
+            addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+                // No-op here, have to override both
+                override fun onStartTrackingTouch(slider: Slider) {}
 
-            override fun onStopTrackingTouch(slider: Slider) {
-                binding.mangaReader.scrollToPosition(slider.value.toInt())
-            }
-        })
+                override fun onStopTrackingTouch(slider: Slider) {
+                    binding.mangaReader.scrollToPosition(slider.value.toInt())
+                }
+            })
+        }
     }
 
     fun initReader() {
