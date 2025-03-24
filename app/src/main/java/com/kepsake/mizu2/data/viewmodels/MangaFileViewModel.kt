@@ -79,7 +79,10 @@ class MangaFileViewModel(application: Application) : AndroidViewModel(applicatio
             val filesInDb = mangaFileDao.getAll()
             val filesToBeAddedOrUpdated = filesOnDisk.map { fileOnDisk ->
                 val existing = filesInDb.find { it.path == fileOnDisk.path }
-                if (existing != null) fileOnDisk.id = existing.id
+                if (existing != null) {
+                    fileOnDisk.id = existing.id
+                    fileOnDisk.current_page = existing.current_page
+                }
                 fileOnDisk
             }
 

@@ -86,6 +86,7 @@ class MainActivityUIHelper(
             layoutManager = mangaLayoutManager
             adapter = mangaAdapter
             clipToPadding = false
+            isVerticalScrollBarEnabled = true
 
             setHasFixedSize(true)
             addItemDecoration(

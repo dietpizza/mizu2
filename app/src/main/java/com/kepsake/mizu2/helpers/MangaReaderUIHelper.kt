@@ -8,7 +8,6 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.kepsake.mizu2.activities.MangaReaderActivity
-import com.kepsake.mizu2.activities.SpaceItemDecoration
 import com.kepsake.mizu2.adapters.MangaPanelAdapter
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.data.models.MangaPanel
@@ -16,6 +15,7 @@ import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.data.viewmodels.MangaPanelViewModel
 import com.kepsake.mizu2.databinding.ActivityMangaReaderBinding
 import com.kepsake.mizu2.logic.NaturalOrderComparator
+import com.kepsake.mizu2.ui.SpaceItemDecoration
 import com.kepsake.mizu2.utils.dpToPx
 import com.kepsake.mizu2.utils.getMangaPagesAspectRatios
 import com.kepsake.mizu2.utils.getSystemBarsHeight

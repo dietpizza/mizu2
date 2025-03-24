@@ -1,36 +1,15 @@
 package com.kepsake.mizu2.activities
 
-import android.graphics.Rect
 import android.os.Bundle
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.RecyclerView
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.data.viewmodels.MangaPanelViewModel
 import com.kepsake.mizu2.databinding.ActivityMangaReaderBinding
 import com.kepsake.mizu2.helpers.MangaReaderUIHelper
 import kotlinx.coroutines.launch
-
-class SpaceItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
-    override fun getItemOffsets(
-        outRect: Rect,
-        view: View,
-        parent: RecyclerView,
-        state: RecyclerView.State
-    ) {
-        val position = parent.getChildAdapterPosition(view)
-        val itemCount = state.itemCount
-
-        if (position < itemCount - 1) {
-            outRect.bottom = spaceHeight
-        } else {
-            outRect.bottom = 0
-        }
-    }
-}
 
 class MangaReaderActivity : ComponentActivity() {
     val TAG = "MangaReaderActivity"

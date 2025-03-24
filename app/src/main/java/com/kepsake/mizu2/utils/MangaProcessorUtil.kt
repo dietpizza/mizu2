@@ -30,17 +30,19 @@ suspend fun processMangaFiles(
                     val lastModified: Long = file.lastModified()
                     val pageCount = getZipPageCount(path)
 
-                    val manga = MangaFile(
-                        id = 0,
-                        path = path,
-                        name = file.nameWithoutExtension,
-                        cover_path = coverPath!!, // TODO handle null case
-                        current_page = 0, // this is default for new manga
-                        total_pages = pageCount,
-                        last_modified = lastModified
-                    )
+                    coverPath?.let {
+                        val manga = MangaFile(
+                            id = 0,
+                            path = path,
+                            name = file.nameWithoutExtension,
+                            cover_path = coverPath,
+                            current_page = 0,
+                            total_pages = pageCount,
+                            last_modified = lastModified
+                        )
 
-                    libraryEntries.add(manga)
+                        libraryEntries.add(manga)
+                    }
                 }
             } catch (e: Exception) {
                 // TODO nothing to do
