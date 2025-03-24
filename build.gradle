@@ -1,14 +1,10 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.objectboxVersion = "4.2.0" // For Groovy build scripts
-
     repositories {
         mavenCentral()
     }
 
     dependencies {
-        // Android Gradle Plugin 8.0 or later supported
-        classpath("io.objectbox:objectbox-gradle-plugin:$objectboxVersion")
     }
 }
 

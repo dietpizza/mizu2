@@ -11,21 +11,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.kepsake.mizu2.MizuApplication
 import com.kepsake.mizu2.constants.LibraryPath
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.databinding.ActivityMainBinding
 import com.kepsake.mizu2.helpers.MainActivityUIHelper
 import com.kepsake.mizu2.utils.getFilePathFromUri
-import io.objectbox.Box
-import io.objectbox.kotlin.boxFor
 
 
 class MainActivity : ComponentActivity() {
     val TAG = "MainActivity"
 
-    private lateinit var mangaBox: Box<MangaFile>
     private lateinit var binding: ActivityMainBinding
 
     private val mangaFileViewModel: MangaFileViewModel by viewModels()
@@ -62,9 +58,6 @@ class MainActivity : ComponentActivity() {
         setContentView(binding.root)
 
         requestManageExternalStoragePermission()
-
-        val boxStore = (application as MizuApplication).boxStore
-        mangaBox = boxStore.boxFor()
 
         mangaFileViewModel.loadMangaFiles()
 

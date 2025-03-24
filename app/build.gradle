@@ -2,9 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("kotlin-parcelize")
-    id("kotlin-kapt")
-    id 'com.google.devtools.ksp' version '2.0.21-1.0.27' // Use latest version
+    alias(libs.plugins.ksp)
+    id "kotlin-parcelize"
 }
 
 android {
@@ -54,8 +53,6 @@ dependencies {
     // additional dependencies
     implementation libs.androidx.swiperefreshlayout
     implementation libs.coil.kt.coil.compose
-    implementation libs.objectbox.android
-    implementation libs.objectbox.kotlin
 
     implementation libs.androidx.room.runtime
     implementation libs.androidx.room.ktx

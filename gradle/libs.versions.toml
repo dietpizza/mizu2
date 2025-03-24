@@ -2,12 +2,11 @@
 agp = "8.8.2"
 coilCompose = "2.6.0"
 kotlin = "2.0.21"
+ksp = "2.0.21-1.0.27"
 coreKtx = "1.15.0"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
 material = "1.12.0"
-objectboxAndroid = "4.2.0"
-objectboxKotlin = "4.2.0"
 roomRuntime = "2.6.1"
 swiperefreshlayout = "1.1.0"
 
@@ -21,11 +20,10 @@ coil-kt-coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
-objectbox-android = { module = "io.objectbox:objectbox-android", version.ref = "objectboxAndroid" }
-objectbox-kotlin = { module = "io.objectbox:objectbox-kotlin", version.ref = "objectboxKotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 

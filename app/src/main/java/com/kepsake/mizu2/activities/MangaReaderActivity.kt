@@ -8,15 +8,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.kepsake.mizu2.MizuApplication
-import com.kepsake.mizu2.data.models.MangaFile
-import com.kepsake.mizu2.data.models.MangaPanel
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.data.viewmodels.MangaPanelViewModel
 import com.kepsake.mizu2.databinding.ActivityMangaReaderBinding
 import com.kepsake.mizu2.helpers.MangaReaderUIHelper
-import io.objectbox.Box
-import io.objectbox.kotlin.boxFor
 import kotlinx.coroutines.launch
 
 class SpaceItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
@@ -40,8 +35,6 @@ class SpaceItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecor
 class MangaReaderActivity : ComponentActivity() {
     val TAG = "MangaReaderActivity"
 
-    private lateinit var mangaPanelBox: Box<MangaPanel>
-    private lateinit var mangaFileBox: Box<MangaFile>
     private lateinit var binding: ActivityMangaReaderBinding
 
     private val mangaId by lazy { intent.getLongExtra("id", -1) }
@@ -59,11 +52,6 @@ class MangaReaderActivity : ComponentActivity() {
 
         binding = ActivityMangaReaderBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        val boxStore = (application as MizuApplication).boxStore
-
-        mangaFileBox = boxStore.boxFor()
-        mangaPanelBox = boxStore.boxFor()
 
         vMangaFile.loadMangaFileById(mangaId)
 
