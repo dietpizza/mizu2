@@ -22,9 +22,7 @@ import com.kepsake.mizu2.utils.getMangaPagesAspectRatios
 import com.kepsake.mizu2.utils.getSystemBarsHeight
 import com.kepsake.mizu2.utils.getZipFileEntries
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -112,47 +110,54 @@ class MangaReaderUIHelper(
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
             val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-            val f1 = layoutManager.findFirstCompletelyVisibleItemPosition()
+            var visiblePageIndex = layoutManager.findFirstCompletelyVisibleItemPosition()
 
-            if (f1 >= 0 && f1 != currentPage) {
-                binding.buttonFirstPage.isEnabled = f1 != 0
-                binding.buttonLastPage.isEnabled = f1 != mangaPanelAdapter.itemCount - 1
+            if (visiblePageIndex < 0)
+                visiblePageIndex = layoutManager.findLastVisibleItemPosition()
+
+            if (visiblePageIndex >= 0 && visiblePageIndex != currentPage) {
+                binding.buttonFirstPage.isEnabled = visiblePageIndex != 0
+                binding.buttonLastPage.isEnabled =
+                    visiblePageIndex != mangaPanelAdapter.itemCount - 1
 
                 vMangaFile.mangaFile.value?.let {
-                    vMangaFile.silentUpdateCurrentPage(it.id, f1)
-                    binding.pageSlider.value = f1.toFloat()
+                    vMangaFile.silentUpdateCurrentPage(it.id, visiblePageIndex)
+                    binding.pageSlider.value = visiblePageIndex.toFloat()
                 }
-                currentPage = f1
+                currentPage = visiblePageIndex
             }
         }
     }
 
-    @OptIn(FlowPreview::class)
     suspend fun loadMangaPanels(mangaFile: MangaFile) {
         val entries = getZipFileEntries(mangaFile.path)
             .sortedWith(compareBy(NaturalOrderComparator()) { it.name })
 
-        val progressFlow = MutableStateFlow(0f)
+        var prevPercent = 0
+        val progressFlow = MutableStateFlow(0)
 
         val progressJob = lifecycleScope.launch(Dispatchers.Main) {
-            progressFlow.sample(300).collect { progress ->
-                val progressValue = (progress * 100f)
-                ObjectAnimator.ofInt(
-                    binding.progressbar,
-                    "progress",
-                    binding.progressbar.progress,
-                    progressValue.toInt()
-                ).apply {
-                    duration = 200 // Animation duration in milliseconds
-                    interpolator = DecelerateInterpolator() // For a smooth deceleration effect
-                    start()
+            progressFlow.collect { percent ->
+                if (prevPercent != percent && percent % 10 == 0) {
+                    ObjectAnimator.ofInt(
+                        binding.progressbar,
+                        "progress",
+                        binding.progressbar.progress,
+                        percent
+                    ).apply {
+                        duration = 200
+                        interpolator = DecelerateInterpolator()
+                        start()
+                    }
+
                 }
+                prevPercent = percent
             }
         }
 
         val pageAspectRatioMap = withContext(Dispatchers.IO) {
             getMangaPagesAspectRatios(activity, mangaFile.path) { progress ->
-                progressFlow.value = progress
+                progressFlow.value = (progress * 100f).toInt()
             }
         }
 
