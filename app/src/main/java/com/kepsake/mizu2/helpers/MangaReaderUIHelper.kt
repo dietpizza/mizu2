@@ -22,6 +22,7 @@ import com.kepsake.mizu2.utils.getMangaPagesAspectRatios
 import com.kepsake.mizu2.utils.getSystemBarsHeight
 import com.kepsake.mizu2.utils.getZipFileEntries
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -161,6 +162,7 @@ class MangaReaderUIHelper(
             }
         }
 
+        delay(250) // Let the loading animation finish
         progressJob.cancel()
 
         pageAspectRatioMap?.let { ratioMap ->
@@ -173,5 +175,7 @@ class MangaReaderUIHelper(
             }
             vMangaPanel.addMangaPanels(allPages)
         }
+
+
     }
 }
