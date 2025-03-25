@@ -1,7 +1,6 @@
 package com.kepsake.mizu2.helpers
 
 import android.animation.ObjectAnimator
-import android.util.Log
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.core.view.updatePadding
@@ -39,11 +38,20 @@ class MangaReaderUIHelper(
     private val TAG = "MangaReaderUIHelper"
     private lateinit var mangaPanelAdapter: MangaPanelAdapter
 
-    fun initSlider(max: Int) {
+    fun initSliderToolbar(max: Int) {
         val currentPage = vMangaFile.mangaFile.value?.current_page ?: 0
 
         binding.bottomAppBar.apply {
             visibility = View.VISIBLE
+        }
+
+        binding.mangaReader.apply {
+            binding.buttonFirstPage.setOnClickListener {
+                scrollToPosition(0)
+            }
+            binding.buttonLastPage.setOnClickListener {
+                scrollToPosition(max)
+            }
         }
 
         binding.pageSlider.apply {
@@ -97,19 +105,21 @@ class MangaReaderUIHelper(
 
     private fun createScrollListener() = object : RecyclerView.OnScrollListener() {
         private var currentPage = 0
+
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
             val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-            val firstVisibleItemPosition = layoutManager.findFirstCompletelyVisibleItemPosition()
+            val f1 = layoutManager.findFirstCompletelyVisibleItemPosition()
 
-            if (firstVisibleItemPosition >= 0 && firstVisibleItemPosition != currentPage) {
-                currentPage = firstVisibleItemPosition
-                Log.e(TAG, "onScrolled: $currentPage")
+            if (f1 >= 0 && f1 != currentPage) {
+                binding.buttonFirstPage.isEnabled = f1 != 0
+                binding.buttonLastPage.isEnabled = f1 != mangaPanelAdapter.itemCount - 1
 
                 vMangaFile.mangaFile.value?.let {
-                    vMangaFile.silentUpdateCurrentPage(it.id, currentPage)
-                    binding.pageSlider.value = currentPage.toFloat()
+                    vMangaFile.silentUpdateCurrentPage(it.id, f1)
+                    binding.pageSlider.value = f1.toFloat()
                 }
+                currentPage = f1
             }
         }
     }

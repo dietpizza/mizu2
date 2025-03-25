@@ -33,27 +33,40 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
         app:layout_scrollFlags="scroll|enterAlways|snap">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="8dp">
+            android:orientation="horizontal"
+            android:paddingVertical="8dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonFirstPage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_first_page"
+                style="?attr/materialIconButtonStyle" />
 
             <com.google.android.material.slider.Slider
                 android:id="@+id/pageSlider"
-                android:layout_width="match_parent"
+                android:layout_weight="1"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:stepSize="10.0"
                 android:value="50"
                 android:valueFrom="0f"
                 android:valueTo="100f"
-                app:haloRadius="12dp"
-                app:thumbRadius="14dp"
-                app:trackHeight="4dp" />
+                app:trackHeight="16dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonLastPage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:icon="@drawable/ic_last_page"
+                style="?attr/materialIconButtonStyle" />
 
         </LinearLayout>
 

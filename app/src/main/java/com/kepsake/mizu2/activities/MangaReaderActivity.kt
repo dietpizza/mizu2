@@ -60,7 +60,7 @@ class MangaReaderActivity : ComponentActivity() {
                     } else {
                         uiSetup.updatePanels(panels)
                         binding.mangaReader.scrollToPosition(manga.current_page)
-                        uiSetup.initSlider(panels.size - 1)
+                        uiSetup.initSliderToolbar(panels.size - 1)
                     }
                 }
                 uiSetup.syncViewVisibility()
