@@ -9,6 +9,7 @@ import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.data.viewmodels.MangaPanelViewModel
 import com.kepsake.mizu2.databinding.ActivityMangaReaderBinding
 import com.kepsake.mizu2.helpers.MangaReaderUIHelper
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MangaReaderActivity : ComponentActivity() {
@@ -31,8 +32,14 @@ class MangaReaderActivity : ComponentActivity() {
 
         binding = ActivityMangaReaderBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         vMangaFile.loadMangaFileById(mangaId)
+
+        lifecycleScope.launch {
+            binding.bottomAppBar.apply {
+                delay(10)
+                performHide(false)
+            }
+        }
 
         initializeApp()
     }

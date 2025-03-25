@@ -40,11 +40,6 @@ class MangaReaderUIHelper(
 
     fun initSliderToolbar(max: Int) {
         val currentPage = vMangaFile.mangaFile.value?.current_page ?: 0
-
-        binding.bottomAppBar.apply {
-            visibility = View.VISIBLE
-        }
-
         binding.mangaReader.apply {
             binding.buttonFirstPage.setOnClickListener {
                 scrollToPosition(0)
@@ -74,7 +69,15 @@ class MangaReaderUIHelper(
     fun initReader() {
         vMangaFile.mangaFile.value?.let { manga ->
             val heights = getSystemBarsHeight(activity)
-            mangaPanelAdapter = MangaPanelAdapter(manga, emptyList())
+            mangaPanelAdapter = MangaPanelAdapter(manga, emptyList(), {
+                binding.bottomAppBar.apply {
+                    if (isScrolledUp) {
+                        performHide(true)
+                    } else {
+                        performShow(true)
+                    }
+                }
+            })
 
             binding.mangaReader.updatePadding()
             binding.mangaReader.apply {

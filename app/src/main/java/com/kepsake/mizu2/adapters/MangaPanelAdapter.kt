@@ -18,6 +18,7 @@ import kotlinx.coroutines.withContext
 class MangaPanelAdapter(
     private val manga: MangaFile,
     private var mangaPanels: List<MangaPanel>,
+    private val onClickListener: (MangaPanel) -> Unit
 ) : RecyclerView.Adapter<MangaPanelAdapter.MangaViewHolder>() {
 
     private val screenWidth = Resources.getSystem().displayMetrics.widthPixels
@@ -44,6 +45,9 @@ class MangaPanelAdapter(
 
         holder.binding.mangaPanel.layoutParams.height = imageHeight
         holder.binding.mangaPanel.requestLayout()
+        holder.binding.mangaPanel.setOnClickListener {
+            onClickListener(page)
+        }
 
         CoroutineScope(Dispatchers.Main).launch {
             val bitmap = pageCache[pageKey] ?: withContext(Dispatchers.IO) {

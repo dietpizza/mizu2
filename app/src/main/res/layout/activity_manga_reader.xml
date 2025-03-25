@@ -32,16 +32,15 @@
         android:id="@+id/bottomAppBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:visibility="gone"
-        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
-        app:layout_scrollFlags="scroll|enterAlways|snap">
+        android:layout_gravity="bottom">
+        <!--app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"-->
+        <!--app:layout_scrollFlags="scroll|enterAlways|snap">-->
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
-            android:paddingVertical="8dp">
+            android:paddingVertical="4dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonFirstPage"
@@ -55,11 +54,13 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:stepSize="10.0"
-                android:value="50"
+                android:stepSize="1.0"
+                android:value="0"
                 android:valueFrom="0f"
                 android:valueTo="100f"
-                app:trackHeight="16dp" />
+                app:trackHeight="12dp"
+                app:thumbHeight="32dp" />
+
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonLastPage"
