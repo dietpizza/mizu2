@@ -43,8 +43,8 @@ class MangaPanelAdapter(
         val imageHeight = (screenWidth / page.aspect_ratio).toInt()
         val pageKey = mangaPanels[position].page_name
 
-        holder.binding.mangaPanel.layoutParams.height = imageHeight
-        holder.binding.mangaPanel.requestLayout()
+        holder.binding.mangaPanelLayout.layoutParams.height = imageHeight
+        holder.binding.mangaPanelLayout.requestLayout()
         holder.binding.mangaPanel.setOnClickListener {
             onClickListener(page)
         }
@@ -62,6 +62,7 @@ class MangaPanelAdapter(
 //                    placeholder(R.drawable.image_thin)
 //                    error(R.drawable.image_broken_thin)
                 }
+                holder.binding.pageNumber.text = "${position + 1}"
             }
         }
 
