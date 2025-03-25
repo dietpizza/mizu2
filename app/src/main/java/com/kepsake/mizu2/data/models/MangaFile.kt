@@ -40,4 +40,26 @@ interface MangaFileDao {
 
     @Delete
     suspend fun delete(mangaFile: MangaFile)
+
+    @Query("DELETE FROM manga_files WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
+
+    @Query(
+        """
+        DELETE FROM manga_files 
+        WHERE id NOT IN (
+            SELECT MIN(id) 
+            FROM manga_files 
+            GROUP BY path
+        )
+        AND path IN (
+            SELECT path 
+            FROM manga_files 
+            GROUP BY path 
+            HAVING COUNT(*) > 1
+        )
+    """
+    )
+    suspend fun deleteDuplicatePaths()
+
 }

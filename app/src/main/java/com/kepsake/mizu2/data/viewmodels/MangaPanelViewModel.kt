@@ -41,5 +41,11 @@ class MangaPanelViewModel(application: Application) : AndroidViewModel(applicati
             }
         }
     }
+
+    fun deletePagesFor(mangaId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            mangaPanelDao.deletePagesFor(mangaId)
+        }
+    }
 }
 

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.kepsake.mizu2.data.MangaDatabase
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.data.models.MangaFileDao
+import com.kepsake.mizu2.data.models.MangaPanelDao
 import com.kepsake.mizu2.logic.NaturalOrderComparator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,8 +27,12 @@ enum class SortOrder {
 
 class MangaFileViewModel(application: Application) : AndroidViewModel(application) {
     private val mangaFileDao: MangaFileDao = MangaDatabase.getDatabase(application).mangaFileDao()
+    private val mangaPanelDao: MangaPanelDao =
+        MangaDatabase.getDatabase(application).mangaPanelDao()
+
     private val sharedPreferences =
         application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
     private val naturalOrderComparator = NaturalOrderComparator()
 
     companion object {
@@ -85,8 +90,17 @@ class MangaFileViewModel(application: Application) : AndroidViewModel(applicatio
                 }
                 fileOnDisk
             }
+            val idsToBeDeleted = filesInDb
+                .filter { file -> filesOnDisk.find { file.path == it.path } == null }
+                .map { it.id }
+
+            if (idsToBeDeleted.size > 0) {
+                mangaFileDao.deleteByIds(idsToBeDeleted)
+                mangaPanelDao.deletePagesFor(idsToBeDeleted)
+            }
 
             mangaFileDao.insertOrUpdateAll(filesToBeAddedOrUpdated)
+            mangaFileDao.deleteDuplicatePaths()
             loadMangaFiles()
         }
     }

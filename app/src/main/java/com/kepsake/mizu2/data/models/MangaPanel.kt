@@ -30,4 +30,10 @@ interface MangaPanelDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateAll(mangaPanels: List<MangaPanel>)
+
+    @Query("DELETE FROM manga_panels WHERE manga_id = :id")
+    suspend fun deletePagesFor(id: Long)
+
+    @Query("DELETE FROM manga_panels WHERE manga_id = (:ids)")
+    suspend fun deletePagesFor(ids: List<Long>)
 }
