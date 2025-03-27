@@ -1,6 +1,5 @@
 package com.kepsake.mizu2.utils
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -92,11 +91,9 @@ fun extractCoverImage(coversDir: File, mangaPath: String): String? {
 
 
 fun getMangaPagesAspectRatios(
-    context: Context,
     zipFilePath: String,
     onAspectRatioCalculated: (progress: Float) -> Unit
 ): MutableMap<String, Float>? {
-    val tmpFile = File(context.cacheDir, "temp_aspect")
     val pageAspectRatioMap = emptyMap<String, Float>().toMutableMap()
 
     try {
@@ -117,8 +114,6 @@ fun getMangaPagesAspectRatios(
     } catch (e: Exception) {
         // Handle exception or log error
         e.printStackTrace()
-    } finally {
-        tmpFile.delete()
     }
     return null
 }

@@ -162,7 +162,7 @@ class MangaReaderUIHelper(
         }
 
         val pageAspectRatioMap = withContext(Dispatchers.IO) {
-            getMangaPagesAspectRatios(activity, mangaFile.path) { progress ->
+            getMangaPagesAspectRatios(mangaFile.path) { progress ->
                 progressFlow.value = (progress * 100f).toInt()
             }
         }
