@@ -12,7 +12,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.kepsake.mizu2.R
-import com.kepsake.mizu2.activities.MainActivity
+import com.kepsake.mizu2.activities.HomeActivity
 import com.kepsake.mizu2.adapters.MangaCardAdapter
 import com.kepsake.mizu2.constants.LibraryPath
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
@@ -26,7 +26,7 @@ import com.kepsake.mizu2.utils.processMangaFiles
 import kotlinx.coroutines.launch
 
 class MainActivityUIHelper(
-    private val activity: MainActivity,
+    private val activity: HomeActivity,
     private val binding: ActivityMainBinding,
     private val vMangaFile: MangaFileViewModel,
     private val lifecycleScope: LifecycleCoroutineScope
@@ -99,6 +99,12 @@ class MainActivityUIHelper(
     }
 
     fun initGetDataView() {
+        binding.selectFolderButton.setOnClickListener {
+            activity.openFolderPicker()
+        }
+    }
+
+    fun initEmptyFolderView() {
         binding.selectFolderButton.setOnClickListener {
             activity.openFolderPicker()
         }

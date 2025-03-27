@@ -19,7 +19,7 @@ import com.kepsake.mizu2.helpers.MainActivityUIHelper
 import com.kepsake.mizu2.utils.getFilePathFromUri
 
 
-class MainActivity : ComponentActivity() {
+class HomeActivity : ComponentActivity() {
     val TAG = "MainActivity"
 
     private lateinit var binding: ActivityMainBinding
@@ -69,6 +69,7 @@ class MainActivity : ComponentActivity() {
         uiHelper.initTopLoader()
         uiHelper.initGridView()
         uiHelper.initGetDataView()
+        uiHelper.initEmptyFolderView()
         uiHelper.observeMangaData()
         uiHelper.syncLibrary()
     }

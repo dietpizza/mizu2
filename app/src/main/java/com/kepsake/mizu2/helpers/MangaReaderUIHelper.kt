@@ -1,6 +1,7 @@
 package com.kepsake.mizu2.helpers
 
 import android.animation.ObjectAnimator
+import android.util.Log
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.core.view.updatePadding
@@ -17,6 +18,7 @@ import com.kepsake.mizu2.data.viewmodels.MangaPanelViewModel
 import com.kepsake.mizu2.databinding.ActivityMangaReaderBinding
 import com.kepsake.mizu2.logic.NaturalOrderComparator
 import com.kepsake.mizu2.ui.SpaceItemDecoration
+import com.kepsake.mizu2.utils.RecyclerViewPageTracker
 import com.kepsake.mizu2.utils.dpToPx
 import com.kepsake.mizu2.utils.getMangaPagesAspectRatios
 import com.kepsake.mizu2.utils.getSystemBarsHeight
@@ -92,6 +94,9 @@ class MangaReaderUIHelper(
                 addOnScrollListener(createScrollListener())
                 addItemDecoration(SpaceItemDecoration(8.dpToPx()))
             }
+            RecyclerViewPageTracker(binding.mangaReader, onNewVisiblePosition = {
+                Log.e(TAG, "initReader Page: $it")
+            })
         }
     }
 
