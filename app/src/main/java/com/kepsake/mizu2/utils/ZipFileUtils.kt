@@ -105,19 +105,12 @@ fun getMangaPagesAspectRatios(
             val totalEntries = entries.size
 
             entries.forEachIndexed { index, entry ->
-                zipFile.getInputStream(entry).use { input ->
-                    tmpFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
-                val aspectRatio = getImageAspectRatio(tmpFile.path)
-                pageAspectRatioMap[entry.name] = aspectRatio
-
-                // Calculate progress as a percentage (0.0f to 1.0f)
                 val progress = (index + 1).toFloat() / totalEntries
 
-                // Call the callback with the file name, aspect ratio, and progress
-                onAspectRatioCalculated(progress)
+                zipFile.getInputStream(entry).use { input ->
+                    pageAspectRatioMap[entry.name] = getImageAspectRatio(input)
+                    onAspectRatioCalculated(progress)
+                }
             }
         }
         return pageAspectRatioMap

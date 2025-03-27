@@ -8,6 +8,7 @@ import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import java.io.File
+import java.io.InputStream
 
 
 fun isImageFile(fileName: String): Boolean {
@@ -87,12 +88,13 @@ fun getFilePathFromUri(context: Context, uri: Uri): String? {
     return null
 }
 
-fun getImageAspectRatio(filePath: String): Float {
+fun getImageAspectRatio(input: InputStream): Float {
     val options = BitmapFactory.Options().apply {
-        inJustDecodeBounds = true  // This avoids loading the full bitmap into memory
+        inJustDecodeBounds = true
     }
-    BitmapFactory.decodeFile(filePath, options)
 
+    BitmapFactory.decodeStream(input, null, options)
+   
     val width = options.outWidth
     val height = options.outHeight
 
