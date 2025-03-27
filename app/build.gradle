@@ -14,8 +14,8 @@ android {
         applicationId "com.kepsake.mizu2"
         minSdk 30
         targetSdk 35
-        versionCode 3
-        versionName "1.1.5"
+        versionCode 4
+        versionName "1.1.7"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
