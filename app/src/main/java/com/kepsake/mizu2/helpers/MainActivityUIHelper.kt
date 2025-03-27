@@ -18,7 +18,7 @@ import com.kepsake.mizu2.constants.LibraryPath
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.data.viewmodels.SortOption
 import com.kepsake.mizu2.data.viewmodels.SortOrder
-import com.kepsake.mizu2.databinding.ActivityMainBinding
+import com.kepsake.mizu2.databinding.ActivityHomeBinding
 import com.kepsake.mizu2.ui.GridSpacingItemDecoration
 import com.kepsake.mizu2.utils.dpToPx
 import com.kepsake.mizu2.utils.getSystemBarsHeight
@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 
 class MainActivityUIHelper(
     private val activity: HomeActivity,
-    private val binding: ActivityMainBinding,
+    private val binding: ActivityHomeBinding,
     private val vMangaFile: MangaFileViewModel,
     private val lifecycleScope: LifecycleCoroutineScope
 ) {
@@ -82,7 +82,7 @@ class MainActivityUIHelper(
             activity.openMangaReader(manga)
         }
 
-        binding.mangaList.apply {
+        binding.recyclerView.apply {
             layoutManager = mangaLayoutManager
             adapter = mangaAdapter
             clipToPadding = false
@@ -105,7 +105,7 @@ class MainActivityUIHelper(
     }
 
     fun initEmptyFolderView() {
-        binding.selectFolderButton.setOnClickListener {
+        binding.changeFolderButton.setOnClickListener {
             activity.openFolderPicker()
         }
     }
@@ -123,18 +123,36 @@ class MainActivityUIHelper(
         val libraryPath = sharedPrefs.getString(LibraryPath, null)
         val isLibraryPathAvailable = libraryPath != null
 
-        if (!isLibraryPathAvailable && !binding.pullToRefresh.isRefreshing) {
-            binding.getDataLayout.visibility = View.VISIBLE
-            binding.mangaList.visibility = View.GONE
+        if (binding.pullToRefresh.isRefreshing) {
+            binding.selectFolderButton.isEnabled = false
+            binding.changeFolderButton.isEnabled = false
+        } else {
+            binding.selectFolderButton.isEnabled = true
+            binding.changeFolderButton.isEnabled = true
         }
 
-        if (isLibraryPathAvailable && mangaList.isEmpty()) {
-            // TODO show change folder ui
+        if (binding.pullToRefresh.isRefreshing) {
+            binding.selectFolderLayout.visibility = View.GONE
+            binding.changeFolderLayout.visibility = View.GONE
+            binding.recyclerView.visibility = View.GONE
+            return
         }
 
-        if (isLibraryPathAvailable) {
-            binding.getDataLayout.visibility = View.GONE
-            binding.mangaList.visibility = View.VISIBLE
+        if (mangaList.isEmpty()) {
+            if (isLibraryPathAvailable) {
+                binding.changeFolderLayout.visibility = View.VISIBLE
+                binding.selectFolderLayout.visibility = View.GONE
+                binding.recyclerView.visibility = View.GONE
+            }
+            if (!isLibraryPathAvailable) {
+                binding.changeFolderLayout.visibility = View.GONE
+                binding.selectFolderLayout.visibility = View.VISIBLE
+                binding.recyclerView.visibility = View.GONE
+            }
+        } else {
+            binding.changeFolderLayout.visibility = View.GONE
+            binding.selectFolderLayout.visibility = View.GONE
+            binding.recyclerView.visibility = View.VISIBLE
         }
     }
 
@@ -196,12 +214,11 @@ class MainActivityUIHelper(
             if (libraryPath != null) {
                 binding.pullToRefresh.isRefreshing = true
                 syncViewVisibility()
+
                 val mangas = processMangaFiles(activity, libraryPath)
                 vMangaFile.syncWithDisk(mangas)
 
-                // This is to avoid weird animation jumps
                 binding.pullToRefresh.isRefreshing = false
-                syncViewVisibility()
             }
         }
     }

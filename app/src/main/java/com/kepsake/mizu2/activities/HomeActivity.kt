@@ -14,15 +14,15 @@ import androidx.lifecycle.lifecycleScope
 import com.kepsake.mizu2.constants.LibraryPath
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
-import com.kepsake.mizu2.databinding.ActivityMainBinding
+import com.kepsake.mizu2.databinding.ActivityHomeBinding
 import com.kepsake.mizu2.helpers.MainActivityUIHelper
 import com.kepsake.mizu2.utils.getFilePathFromUri
 
 
 class HomeActivity : ComponentActivity() {
-    val TAG = "MainActivity"
+    val TAG = "HomeActivity"
 
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityHomeBinding
 
     private val mangaFileViewModel: MangaFileViewModel by viewModels()
     private val uiHelper by lazy {
@@ -54,7 +54,7 @@ class HomeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         requestManageExternalStoragePermission()
