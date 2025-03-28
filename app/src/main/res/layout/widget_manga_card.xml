@@ -7,7 +7,7 @@
     app:cardElevation="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:background="?attr/colorSurfaceContainer"
+        android:background="?attr/colorSurfaceContainerHighest"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 

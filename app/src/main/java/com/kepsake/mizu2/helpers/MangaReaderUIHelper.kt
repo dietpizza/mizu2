@@ -139,10 +139,11 @@ class MangaReaderUIHelper(
         val entries = getZipFileEntries(mangaFile.path)
             .sortedWith(compareBy(NaturalOrderComparator()) { it.name })
 
-        var prevPercent = 0
         val progressFlow = MutableStateFlow(0)
 
         val progressJob = lifecycleScope.launch(Dispatchers.Main) {
+            val prevPercent = binding.progressbar.progress
+
             progressFlow.collect { percent ->
                 if (prevPercent != percent && percent % 10 == 0) {
                     ObjectAnimator.ofInt(
@@ -155,9 +156,7 @@ class MangaReaderUIHelper(
                         interpolator = DecelerateInterpolator()
                         start()
                     }
-
                 }
-                prevPercent = percent
             }
         }
 
@@ -180,7 +179,6 @@ class MangaReaderUIHelper(
             }
             vMangaPanel.addMangaPanels(allPages)
         }
-
 
     }
 }
