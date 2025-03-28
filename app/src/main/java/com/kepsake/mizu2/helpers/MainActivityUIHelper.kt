@@ -59,7 +59,7 @@ class MainActivityUIHelper(
         binding.pullToRefresh.setColorSchemeColors(
             MaterialColors.getColor(
                 activity,
-                com.google.android.material.R.attr.colorOnSurface,
+                com.google.android.material.R.attr.colorPrimary,
                 Color.WHITE
             ),
         )
@@ -67,7 +67,7 @@ class MainActivityUIHelper(
         binding.pullToRefresh.setProgressBackgroundColorSchemeColor(
             MaterialColors.getColor(
                 activity,
-                com.google.android.material.R.attr.colorSurfaceVariant,
+                com.google.android.material.R.attr.colorSurfaceContainerHigh,
                 Color.WHITE
             )
         )
