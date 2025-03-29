@@ -269,8 +269,8 @@ class ZoomableRecyclerView @JvmOverloads constructor(
     inner class Detector : GestureDetectorWithLongTap(context, listener) {
 
         private var scrollPointerId = 0
-        private var downX = 0
-        private var downY = 0
+        private var downX = 0f
+        private var downY = 0f
         private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
         private var isZoomDragging = false
         var isDoubleTapping = false
@@ -283,14 +283,14 @@ class ZoomableRecyclerView @JvmOverloads constructor(
             when (action) {
                 MotionEvent.ACTION_DOWN -> {
                     scrollPointerId = ev.getPointerId(0)
-                    downX = (ev.x + 0.5f).toInt()
-                    downY = (ev.y + 0.5f).toInt()
+                    downX = ev.x
+                    downY = ev.y
                 }
 
                 MotionEvent.ACTION_POINTER_DOWN -> {
                     scrollPointerId = ev.getPointerId(actionIndex)
-                    downX = (ev.getX(actionIndex) + 0.5f).toInt()
-                    downY = (ev.getY(actionIndex) + 0.5f).toInt()
+                    downX = ev.getX(actionIndex)
+                    downY = ev.getY(actionIndex)
                 }
 
                 MotionEvent.ACTION_MOVE -> {
@@ -303,27 +303,28 @@ class ZoomableRecyclerView @JvmOverloads constructor(
                         return false
                     }
 
-                    val x = (ev.getX(index) + 0.5f).toInt()
-                    val y = (ev.getY(index) + 0.5f).toInt()
+                    val x = ev.getX(index)
+                    val y = ev.getY(index)
                     var dx = x - downX
-                    var dy = if (atFirstPosition || atLastPosition) y - downY else 0
+                    var dy = if (atFirstPosition || atLastPosition) y - downY else 0f
 
                     if (!isZoomDragging && currentScale > 1f) {
                         var startScroll = false
+                        val effectiveTouchSlop = touchSlop / currentScale
 
-                        if (abs(dx) > touchSlop) {
+                        if (abs(dx) > effectiveTouchSlop) {
                             if (dx < 0) {
-                                dx += touchSlop
+                                dx += effectiveTouchSlop
                             } else {
-                                dx -= touchSlop
+                                dx -= effectiveTouchSlop
                             }
                             startScroll = true
                         }
-                        if (abs(dy) > touchSlop) {
+                        if (abs(dy) > effectiveTouchSlop) {
                             if (dy < 0) {
-                                dy += touchSlop
+                                dy += effectiveTouchSlop
                             } else {
-                                dy -= touchSlop
+                                dy -= effectiveTouchSlop
                             }
                             startScroll = true
                         }
@@ -334,7 +335,9 @@ class ZoomableRecyclerView @JvmOverloads constructor(
                     }
 
                     if (isZoomDragging) {
-                        zoomScrollBy(dx, dy)
+                        val scaledDx = (dx * currentScale).toInt()
+                        val scaledDy = (dy * currentScale).toInt()
+                        zoomScrollBy(scaledDx, scaledDy)
                     }
                 }
 
