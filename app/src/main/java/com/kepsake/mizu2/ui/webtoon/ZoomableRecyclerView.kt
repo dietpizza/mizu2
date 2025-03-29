@@ -9,7 +9,10 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.view.animation.DecelerateInterpolator
+import android.view.animation.Interpolator
+import android.widget.OverScroller
 import androidx.core.animation.doOnEnd
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.abs
@@ -32,7 +35,9 @@ class ZoomableRecyclerView @JvmOverloads constructor(
     private var lastVisibleItemPosition = 0
     private var currentScale = DEFAULT_RATE
 
-    private var flingAnimator: AnimatorSet? = null // Add this variable
+    // Replace AnimatorSet with OverScroller
+    private var overScroller: OverScroller
+    private var flingRunnable: Runnable? = null
 
     var zoomOutDisabled = false
         set(value) {
@@ -57,6 +62,11 @@ class ZoomableRecyclerView @JvmOverloads constructor(
 
     var tapListener: ((MotionEvent) -> Unit)? = null
     var longTapListener: ((MotionEvent) -> Boolean)? = null
+
+    init {
+        // Initialize OverScroller with QuinticInterpolator
+        overScroller = OverScroller(context, QuinticInterpolator())
+    }
 
     override fun onMeasure(widthSpec: Int, heightSpec: Int) {
         halfWidth = MeasureSpec.getSize(widthSpec) / 2
@@ -141,39 +151,52 @@ class ZoomableRecyclerView @JvmOverloads constructor(
         Log.e("Fling", "zoomFling: Fling")
         if (currentScale <= 1f) return false
 
-        val distanceTimeFactor = 2f
-        val animatorSet = AnimatorSet()
+        // Cancel any existing flings
+        cancelFling()
 
-        if (velocityX != 0) {
-            val dx = (distanceTimeFactor * velocityX / 2)
-            val newX = getPositionX(x + dx)
-            val translationXAnimator = ValueAnimator.ofFloat(x, newX)
-            translationXAnimator.addUpdateListener { animation ->
-                x = getPositionX(animation.animatedValue as Float)
+        // Calculate start and max positions
+        val startX = x.toInt()
+        val startY = y.toInt()
+        val maxX = (halfWidth * (currentScale - 1)).toInt()
+        val maxY = (halfHeight * (currentScale - 1)).toInt()
+
+        // Initialize OverScroller with current position and velocity
+        overScroller.fling(
+            startX,
+            startY,  // start position
+            velocityX,
+            if (atFirstPosition || atLastPosition) velocityY else 0,  // velocities
+            -maxX,
+            maxX,  // min/max X
+            -maxY,
+            maxY,  // min/max Y
+            maxX / 10,
+            maxY / 10  // overscroll
+        )
+
+        // Create and post a runnable to update the view
+        flingRunnable = object : Runnable {
+            override fun run() {
+                if (overScroller.computeScrollOffset()) {
+                    x = getPositionX(overScroller.currX.toFloat())
+                    y = getPositionY(overScroller.currY.toFloat())
+
+                    // Continue updating
+                    ViewCompat.postOnAnimation(this@ZoomableRecyclerView, this)
+                }
             }
-            animatorSet.play(translationXAnimator)
-        }
-        if (velocityY != 0 && (atFirstPosition || atLastPosition)) {
-            val dy = (distanceTimeFactor * velocityY / 2)
-            val newY = getPositionY(y + dy)
-            val translationYAnimator = ValueAnimator.ofFloat(y, newY)
-            translationYAnimator.addUpdateListener { animation ->
-                y = getPositionY(animation.animatedValue as Float)
-            }
-            animatorSet.play(translationYAnimator)
         }
 
-        flingAnimator = animatorSet // Assign the animator
-        animatorSet.duration = 300
-        animatorSet.interpolator = DecelerateInterpolator()
-        animatorSet.start()
-
+        ViewCompat.postOnAnimation(this, flingRunnable as Runnable)
         return true
     }
 
     fun cancelFling() {
-        flingAnimator?.cancel()
-        flingAnimator = null
+        flingRunnable?.let {
+            removeCallbacks(it)
+            flingRunnable = null
+        }
+        overScroller.abortAnimation()
         stopScroll() // Stop RecyclerView's built-in fling
     }
 
@@ -282,6 +305,8 @@ class ZoomableRecyclerView @JvmOverloads constructor(
 
             when (action) {
                 MotionEvent.ACTION_DOWN -> {
+                    // Cancel any active fling when user touches the screen
+                    cancelFling()
                     scrollPointerId = ev.getPointerId(0)
                     downX = ev.x
                     downY = ev.y
@@ -357,6 +382,13 @@ class ZoomableRecyclerView @JvmOverloads constructor(
                 }
             }
             return super.onTouchEvent(ev)
+        }
+    }
+
+    // Add QuinticInterpolator class for matching RecyclerView fling behavior
+    private class QuinticInterpolator : Interpolator {
+        override fun getInterpolation(t: Float): Float {
+            return t * t * t * t * t
         }
     }
 }
