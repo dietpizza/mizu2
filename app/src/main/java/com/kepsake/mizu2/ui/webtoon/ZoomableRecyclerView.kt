@@ -257,7 +257,6 @@ class ZoomableRecyclerView @JvmOverloads constructor(
 
         override fun onSingleTapConfirmed(ev: MotionEvent): Boolean {
             tapListener?.invoke(ev)
-            onPressListener?.invoke()
             return false
         }
 
@@ -283,9 +282,10 @@ class ZoomableRecyclerView @JvmOverloads constructor(
         }
 
         override fun onLongTapConfirmed(ev: MotionEvent) {
-            if (longTapListener?.invoke(ev) == true) {
-                performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-            }
+            onPressListener?.invoke()
+            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+//            if (longTapListener?.invoke(ev) == true) {
+//            }
         }
     }
 
@@ -388,6 +388,7 @@ class ZoomableRecyclerView @JvmOverloads constructor(
     // Add QuinticInterpolator class for matching RecyclerView fling behavior
     private class QuinticInterpolator : Interpolator {
         override fun getInterpolation(t: Float): Float {
+            if (t < 0.4f) return t * t * t * 0.2f
             return t * t * t * t * t
         }
     }
