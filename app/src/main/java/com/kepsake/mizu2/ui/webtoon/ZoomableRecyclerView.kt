@@ -31,6 +31,8 @@ class ZoomableRecyclerView @JvmOverloads constructor(
     private var lastVisibleItemPosition = 0
     private var currentScale = DEFAULT_RATE
 
+    private var flingAnimator: AnimatorSet? = null // Add this variable
+
     var zoomOutDisabled = false
         set(value) {
             field = value
@@ -159,11 +161,18 @@ class ZoomableRecyclerView @JvmOverloads constructor(
             animatorSet.play(translationYAnimator)
         }
 
+        flingAnimator = animatorSet // Assign the animator
         animatorSet.duration = 400
         animatorSet.interpolator = DecelerateInterpolator()
         animatorSet.start()
 
         return true
+    }
+
+    fun cancelFling() {
+        flingAnimator?.cancel()
+        flingAnimator = null
+        stopScroll() // Stop RecyclerView's built-in fling
     }
 
     private fun zoomScrollBy(dx: Int, dy: Int) {

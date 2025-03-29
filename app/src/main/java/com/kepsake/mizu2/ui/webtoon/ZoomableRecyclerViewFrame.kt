@@ -24,12 +24,7 @@ class ZoomableRecyclerViewFrame @JvmOverloads constructor(
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         scaleDetector.onTouchEvent(ev)
-        /**
-         * There is an issue with  horizontal fling while zoomed in
-         * which causes jank when trying to scroll before the fling animation has finished.
-         * To be fixed
-         * */
-//        flingDetector.onTouchEvent(ev)
+        flingDetector.onTouchEvent(ev)
 
         val recyclerRect = Rect()
         recycler?.getHitRect(recyclerRect) ?: return super.dispatchTouchEvent(ev)
@@ -65,6 +60,7 @@ class ZoomableRecyclerViewFrame @JvmOverloads constructor(
 
     inner class FlingListener : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(e: MotionEvent): Boolean {
+            recycler?.cancelFling()
             return true
         }
 
