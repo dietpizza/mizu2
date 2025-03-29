@@ -3,67 +3,36 @@ package com.kepsake.mizu2.ui.webtoon
 import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.widget.FrameLayout
 
-/**
- * Frame layout which contains a [WebtoonRecyclerView]. It's needed to handle touch events,
- * because the recyclerview is scaled and its touch events are translated, which breaks the
- * detectors.
- *
- * TODO consider integrating this class into [WebtoonViewer].
- */
-
-class WebtoonFrame @JvmOverloads constructor(
+class ZoomableRecyclerViewFrame @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
-//class WebtoonFrame(context: Context) : FrameLayout(context) {
 
-    /**
-     * Scale detector, either with pinch or quick scale.
-     */
     private val scaleDetector = ScaleGestureDetector(context, ScaleListener())
 
-    /**
-     * Fling detector.
-     */
     private val flingDetector = GestureDetector(context, FlingListener())
 
-    var doubleTapZoom = true
-        set(value) {
-            field = value
-            recycler?.doubleTapZoom = value
-            scaleDetector.isQuickScaleEnabled = value
-        }
+    private val recycler: ZoomableRecyclerView?
+        get() = getChildAt(0) as? ZoomableRecyclerView
 
-    var zoomOutDisabled = false
-        set(value) {
-            field = value
-            recycler?.zoomOutDisabled = value
-        }
-
-    /**
-     * Recycler view added in this frame.
-     */
-    private val recycler: WebtoonRecyclerView?
-        get() = getChildAt(0) as? WebtoonRecyclerView
-
-    /**
-     * Dispatches a touch event to the detectors.
-     */
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         scaleDetector.onTouchEvent(ev)
-        flingDetector.onTouchEvent(ev)
+        /**
+         * There is an issue with  horizontal fling while zoomed in
+         * which causes jank when trying to scroll before the fling animation has finished.
+         * To be fixed
+         * */
+//        flingDetector.onTouchEvent(ev)
 
-        // Get the bounding box of the recyclerview and translate any motion events to be within it.
-        // Used to allow scrolling outside the recyclerview.
         val recyclerRect = Rect()
         recycler?.getHitRect(recyclerRect) ?: return super.dispatchTouchEvent(ev)
-        // Shrink the box to account for any rounding issues.
         recyclerRect.inset(1, 1)
 
         if (recyclerRect.right < recyclerRect.left || recyclerRect.bottom < recyclerRect.top) {
@@ -77,9 +46,6 @@ class WebtoonFrame @JvmOverloads constructor(
         return super.dispatchTouchEvent(ev)
     }
 
-    /**
-     * Scale listener used to delegate events to the recycler view.
-     */
     inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
             recycler?.onScaleBegin()
@@ -87,6 +53,7 @@ class WebtoonFrame @JvmOverloads constructor(
         }
 
         override fun onScale(detector: ScaleGestureDetector): Boolean {
+            Log.e("SCALE", "onScale: ${detector.scaleFactor}")
             recycler?.onScale(detector.scaleFactor)
             return true
         }
@@ -96,9 +63,6 @@ class WebtoonFrame @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Fling listener used to delegate events to the recycler view.
-     */
     inner class FlingListener : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(e: MotionEvent): Boolean {
             return true

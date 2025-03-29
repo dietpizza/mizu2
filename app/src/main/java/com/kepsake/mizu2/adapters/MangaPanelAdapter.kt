@@ -45,9 +45,9 @@ class MangaPanelAdapter(
 
         holder.binding.mangaPanelLayout.layoutParams.height = imageHeight
         holder.binding.mangaPanelLayout.requestLayout()
-        holder.binding.mangaPanel.setOnClickListener {
-            onClickListener(page)
-        }
+//        holder.binding.mangaPanel.setOnClickListener {
+//            onClickListener(page)
+//        }
 
         CoroutineScope(Dispatchers.Main).launch {
             val bitmap = pageCache[pageKey] ?: withContext(Dispatchers.IO) {

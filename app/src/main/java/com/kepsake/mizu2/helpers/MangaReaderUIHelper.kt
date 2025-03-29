@@ -70,15 +70,7 @@ class MangaReaderUIHelper(
     fun initReader() {
         vMangaFile.mangaFile.value?.let { manga ->
             val heights = getSystemBarsHeight(activity)
-            mangaPanelAdapter = MangaPanelAdapter(manga, emptyList(), {
-                binding.bottomAppBar.apply {
-                    if (isScrolledUp) {
-                        performHide(true)
-                    } else {
-                        performShow(true)
-                    }
-                }
-            })
+            mangaPanelAdapter = MangaPanelAdapter(manga, emptyList(), {})
 
             binding.mangaReader.updatePadding()
             binding.mangaReader.apply {
@@ -90,6 +82,15 @@ class MangaReaderUIHelper(
                     top = heights.statusBarHeight,
                     bottom = heights.navigationBarHeight
                 )
+                onPressListener = {
+                    binding.bottomAppBar.apply {
+                        if (isScrolledUp) {
+                            performHide(true)
+                        } else {
+                            performShow(true)
+                        }
+                    }
+                }
                 setHasFixedSize(true)
                 addOnScrollListener(createScrollListener())
                 addItemDecoration(SpaceItemDecoration(8.dpToPx()))

@@ -13,10 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.abs
 
-/**
- * Implementation of a [RecyclerView] used by the webtoon reader.
- */
-class WebtoonRecyclerView @JvmOverloads constructor(
+class ZoomableRecyclerView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0,
@@ -33,6 +30,7 @@ class WebtoonRecyclerView @JvmOverloads constructor(
     private var firstVisibleItemPosition = 0
     private var lastVisibleItemPosition = 0
     private var currentScale = DEFAULT_RATE
+
     var zoomOutDisabled = false
         set(value) {
             field = value
@@ -40,8 +38,14 @@ class WebtoonRecyclerView @JvmOverloads constructor(
                 zoom(currentScale, DEFAULT_RATE, x, 0f, y, 0f)
             }
         }
+
     private val minRate
         get() = if (zoomOutDisabled) DEFAULT_RATE else MIN_RATE
+
+    var onPressListener: (() -> Unit)? = null
+        set(value) {
+            field = value
+        }
 
     private val listener = GestureListener()
     private val detector = Detector()
@@ -219,6 +223,7 @@ class WebtoonRecyclerView @JvmOverloads constructor(
 
         override fun onSingleTapConfirmed(ev: MotionEvent): Boolean {
             tapListener?.invoke(ev)
+            onPressListener?.invoke()
             return false
         }
 
@@ -343,6 +348,6 @@ class WebtoonRecyclerView @JvmOverloads constructor(
 }
 
 private const val ANIMATOR_DURATION_TIME = 200
-private const val MIN_RATE = 0.5f
+private const val MIN_RATE = 1f
 private const val DEFAULT_RATE = 1f
 private const val MAX_SCALE_RATE = 3f
