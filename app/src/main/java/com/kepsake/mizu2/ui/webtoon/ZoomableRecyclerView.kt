@@ -4,6 +4,7 @@ import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.ViewConfiguration
@@ -137,9 +138,10 @@ class ZoomableRecyclerView @JvmOverloads constructor(
     }
 
     fun zoomFling(velocityX: Int, velocityY: Int): Boolean {
+        Log.e("Fling", "zoomFling: Fling")
         if (currentScale <= 1f) return false
 
-        val distanceTimeFactor = 0.4f
+        val distanceTimeFactor = 2f
         val animatorSet = AnimatorSet()
 
         if (velocityX != 0) {
@@ -162,7 +164,7 @@ class ZoomableRecyclerView @JvmOverloads constructor(
         }
 
         flingAnimator = animatorSet // Assign the animator
-        animatorSet.duration = 400
+        animatorSet.duration = 300
         animatorSet.interpolator = DecelerateInterpolator()
         animatorSet.start()
 
