@@ -70,7 +70,7 @@ class MangaReaderUIHelper(
     fun initReader() {
         vMangaFile.mangaFile.value?.let { manga ->
             val heights = getSystemBarsHeight(activity)
-            mangaPanelAdapter = MangaPanelAdapter(manga, emptyList(), {})
+            mangaPanelAdapter = MangaPanelAdapter(manga, emptyList())
 
             binding.mangaReader.updatePadding()
             binding.mangaReader.apply {
