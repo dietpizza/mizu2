@@ -4,7 +4,6 @@ import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.ViewConfiguration
@@ -12,7 +11,6 @@ import android.view.animation.DecelerateInterpolator
 import android.view.animation.Interpolator
 import android.widget.OverScroller
 import androidx.core.animation.doOnEnd
-import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.abs
@@ -148,7 +146,6 @@ class ZoomableRecyclerView @JvmOverloads constructor(
     }
 
     fun zoomFling(velocityX: Int, velocityY: Int): Boolean {
-        Log.e("Fling", "zoomFling: Fling")
         if (currentScale <= 1f) return false
 
         // Cancel any existing flings
@@ -157,21 +154,16 @@ class ZoomableRecyclerView @JvmOverloads constructor(
         // Calculate start and max positions
         val startX = x.toInt()
         val startY = y.toInt()
-        val maxX = (halfWidth * (currentScale - 1)).toInt()
-        val maxY = (halfHeight * (currentScale - 1)).toInt()
 
-        // Initialize OverScroller with current position and velocity
         overScroller.fling(
             startX,
-            startY,  // start position
+            startY,
             velocityX,
             if (atFirstPosition || atLastPosition) velocityY else 0,  // velocities
-            -maxX,
-            maxX,  // min/max X
-            -maxY,
-            maxY,  // min/max Y
-            maxX / 10,
-            maxY / 10  // overscroll
+            Int.MIN_VALUE,
+            Int.MAX_VALUE,
+            Int.MIN_VALUE,
+            Int.MAX_VALUE,
         )
 
         // Create and post a runnable to update the view
@@ -182,12 +174,12 @@ class ZoomableRecyclerView @JvmOverloads constructor(
                     y = getPositionY(overScroller.currY.toFloat())
 
                     // Continue updating
-                    ViewCompat.postOnAnimation(this@ZoomableRecyclerView, this)
+                    postOnAnimation(this)
                 }
             }
         }
 
-        ViewCompat.postOnAnimation(this, flingRunnable as Runnable)
+        postOnAnimation(flingRunnable)
         return true
     }
 
@@ -284,8 +276,6 @@ class ZoomableRecyclerView @JvmOverloads constructor(
         override fun onLongTapConfirmed(ev: MotionEvent) {
             onPressListener?.invoke()
             performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-//            if (longTapListener?.invoke(ev) == true) {
-//            }
         }
     }
 
@@ -397,4 +387,4 @@ class ZoomableRecyclerView @JvmOverloads constructor(
 private const val ANIMATOR_DURATION_TIME = 200
 private const val MIN_RATE = 1f
 private const val DEFAULT_RATE = 1f
-private const val MAX_SCALE_RATE = 3f
+private const val MAX_SCALE_RATE = 8f
