@@ -82,7 +82,7 @@ class MangaReaderUIHelper(
                     top = heights.statusBarHeight,
                     bottom = heights.navigationBarHeight
                 )
-                onPressListener = {
+                longTapListener = { ev ->
                     binding.bottomAppBar.apply {
                         if (isScrolledUp) {
                             performHide(true)
@@ -90,6 +90,7 @@ class MangaReaderUIHelper(
                             performShow(true)
                         }
                     }
+                    true
                 }
                 setHasFixedSize(true)
                 addOnScrollListener(createScrollListener())

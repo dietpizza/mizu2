@@ -4,12 +4,14 @@ import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
+import android.view.GestureDetector
+import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.Interpolator
-import android.widget.OverScroller
 import androidx.core.animation.doOnEnd
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -34,7 +36,7 @@ class ZoomableRecyclerView @JvmOverloads constructor(
     private var currentScale = DEFAULT_RATE
 
     // Replace AnimatorSet with OverScroller
-    private var overScroller: OverScroller
+    private var overScroller: CustomScroller
     private var flingRunnable: Runnable? = null
 
     var zoomOutDisabled = false
@@ -48,11 +50,6 @@ class ZoomableRecyclerView @JvmOverloads constructor(
     private val minRate
         get() = if (zoomOutDisabled) DEFAULT_RATE else MIN_RATE
 
-    var onPressListener: (() -> Unit)? = null
-        set(value) {
-            field = value
-        }
-
     private val listener = GestureListener()
     private val detector = Detector()
 
@@ -62,8 +59,7 @@ class ZoomableRecyclerView @JvmOverloads constructor(
     var longTapListener: ((MotionEvent) -> Boolean)? = null
 
     init {
-        // Initialize OverScroller with QuinticInterpolator
-        overScroller = OverScroller(context, QuinticInterpolator())
+        overScroller = CustomScroller(context)
     }
 
     override fun onMeasure(widthSpec: Int, heightSpec: Int) {
@@ -170,8 +166,8 @@ class ZoomableRecyclerView @JvmOverloads constructor(
         flingRunnable = object : Runnable {
             override fun run() {
                 if (overScroller.computeScrollOffset()) {
-                    x = getPositionX(overScroller.currX.toFloat())
-                    y = getPositionY(overScroller.currY.toFloat())
+                    x = getPositionX(overScroller.getCurrX().toFloat())
+                    y = getPositionY(overScroller.getCurrY().toFloat())
 
                     // Continue updating
                     postOnAnimation(this)
@@ -245,11 +241,16 @@ class ZoomableRecyclerView @JvmOverloads constructor(
         }
     }
 
-    inner class GestureListener : GestureDetectorWithLongTap.Listener() {
+    inner class GestureListener : SimpleOnGestureListener() {
 
         override fun onSingleTapConfirmed(ev: MotionEvent): Boolean {
             tapListener?.invoke(ev)
             return false
+        }
+
+        override fun onLongPress(e: MotionEvent) {
+            longTapListener?.invoke(e)
+            performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
         }
 
         override fun onDoubleTap(ev: MotionEvent): Boolean {
@@ -272,14 +273,9 @@ class ZoomableRecyclerView @JvmOverloads constructor(
                 }
             }
         }
-
-        override fun onLongTapConfirmed(ev: MotionEvent) {
-            onPressListener?.invoke()
-            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-        }
     }
 
-    inner class Detector : GestureDetectorWithLongTap(context, listener) {
+    inner class Detector : GestureDetector(context, listener) {
 
         private var scrollPointerId = 0
         private var downX = 0f
@@ -378,6 +374,8 @@ class ZoomableRecyclerView @JvmOverloads constructor(
     // Add QuinticInterpolator class for matching RecyclerView fling behavior
     private class QuinticInterpolator : Interpolator {
         override fun getInterpolation(t: Float): Float {
+
+            Log.e("Interpolator", "getInterpolation: $t")
             if (t < 0.4f) return t * t * t * 0.2f
             return t * t * t * t * t
         }
