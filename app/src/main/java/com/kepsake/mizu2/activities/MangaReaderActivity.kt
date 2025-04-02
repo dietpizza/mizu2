@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -23,12 +22,8 @@ import com.otaliastudios.zoom.ZoomEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.abs
-
-data class ImageViewMeta(
-    val offsetMap: OffsetMap,
-    var view: ImageView,
-)
+import kotlin.math.max
+import kotlin.math.min
 
 data class OffsetMap(
     var offset: Int,
@@ -51,8 +46,6 @@ class MangaReaderActivity : ComponentActivity() {
     private val PREFETCH_DISTANCE = MAX_VIEWS / 2
     private var viewList = mutableListOf<ImageView>()
     private var itemOffsetList = mutableListOf<OffsetMap>()
-
-//    private val imageContainer = binding.imageList
 
     private val uiSetup by lazy {
         MangaReaderUIHelper(this, binding, vMangaFile, vMangaPanel, lifecycleScope)
@@ -103,6 +96,9 @@ class MangaReaderActivity : ComponentActivity() {
     private suspend fun loadImages(images: List<MangaPanel>) {
         var containerHeight = 0
 
+        // Clear existing offset list when loading new images
+        itemOffsetList.clear()
+
         images.forEachIndexed { index, image ->
             val h = (screenWidth / image.aspect_ratio)
             itemOffsetList.add(OffsetMap(containerHeight, h.toInt()))
@@ -115,28 +111,41 @@ class MangaReaderActivity : ComponentActivity() {
         binding.imageList.layoutParams = params
 
         manageImages()
-
-//        vMangaFile.mangaFile.value?.let { file ->
-//            images.forEachIndexed { idx, p ->
-//                addImage(file.path, p, itemOffsetList.get(idx), idx)
-//            }
-//        }
     }
 
     suspend fun manageImages() {
-        val currentIndex = computeVisibleIndex()
-        val range = (currentIndex..(currentIndex + MAX_VIEWS))
-        val map = range.map { idx -> viewList.any { it.id == idx } }
-        Log.e(TAG, "manageImages: $map")
-
-        map.forEachIndexed { idx, isVisible ->
-            if (!isVisible) {
-                vMangaPanel.mangaPanels.value?.get(currentIndex + idx)?.let { panel ->
-                    drawPanel(panel, idx)
-                }
-            }
+        if (itemOffsetList.isEmpty() || vMangaPanel.mangaPanels.value.isNullOrEmpty()) {
+            return
         }
 
+        val visibleStart = computeVisibleIndex()
+        if (visibleStart < 0) return
+
+        // Calculate visible range with prefetch
+        val startIdx = max(0, visibleStart - PREFETCH_DISTANCE)
+        val endIdx = min(itemOffsetList.size - 1, visibleStart + MAX_VIEWS - PREFETCH_DISTANCE)
+        val visibleRange = startIdx..endIdx
+
+        // Identify views to recycle (those outside visible range)
+        val viewsToRecycle = viewList.filter { it.id !in visibleRange }
+
+        // Identify indices that need views but don't have them
+        val neededIndices = visibleRange.filter { idx ->
+            viewList.none { it.id == idx }
+        }
+
+        // Recycle views
+        viewsToRecycle.forEach { view ->
+            viewList.remove(view)
+            binding.imageList.removeView(view)
+        }
+
+        // Create new views for needed indices
+        neededIndices.forEach { idx ->
+            vMangaPanel.mangaPanels.value?.getOrNull(idx)?.let { panel ->
+                drawPanel(panel, idx)
+            }
+        }
     }
 
     private fun computeVisibleIndex(): Int {
@@ -147,33 +156,40 @@ class MangaReaderActivity : ComponentActivity() {
 
         // Edge cases - if currentY is beyond list bounds
         if (currentY <= itemOffsetList[0].offset) return 0
-        if (currentY >= itemOffsetList[itemOffsetList.lastIndex].offset) return itemOffsetList.lastIndex
+        if (currentY >= itemOffsetList.last().offset) return itemOffsetList.lastIndex
 
+        // Binary search to find the closest item to currentY
         var left = 0
         var right = itemOffsetList.lastIndex
 
-        // Binary search to find the two closest items to currentY
-        while (left < right) {
-            // When we're down to two adjacent elements, compare and return
-            if (right - left == 1) {
-                val distLeft = abs(itemOffsetList[left].offset - currentY)
-                val distRight = abs(itemOffsetList[right].offset - currentY)
-                return if (distLeft <= distRight) left else right
-            }
-
+        while (left <= right) {
             val mid = left + (right - left) / 2
+            val midOffset = itemOffsetList[mid].offset
 
-            if (itemOffsetList[mid].offset == currentY) {
-                // Exact match found
-                return mid
-            } else if (itemOffsetList[mid].offset < currentY) {
-                left = mid
-            } else {
-                right = mid
+            when {
+                midOffset == currentY -> return mid
+                midOffset < currentY -> {
+                    // Check if this is the closest one or we need to go right
+                    if (mid < itemOffsetList.lastIndex && itemOffsetList[mid + 1].offset > currentY) {
+                        // Found the closest item
+                        return if (currentY - midOffset < itemOffsetList[mid + 1].offset - currentY) mid else mid + 1
+                    }
+                    left = mid + 1
+                }
+
+                else -> {
+                    // Check if this is the closest one or we need to go left
+                    if (mid > 0 && itemOffsetList[mid - 1].offset < currentY) {
+                        // Found the closest item
+                        return if (midOffset - currentY < currentY - itemOffsetList[mid - 1].offset) mid else mid - 1
+                    }
+                    right = mid - 1
+                }
             }
         }
 
-        return left // Will return something even if loop exits unexpectedly
+        // If we somehow exit the loop without returning, return the left bound
+        return left.coerceIn(0, itemOffsetList.lastIndex)
     }
 
     private fun createImageView(): ImageView {
@@ -191,65 +207,29 @@ class MangaReaderActivity : ComponentActivity() {
         return imageView
     }
 
-    private fun createOrRecycleView(offset: Int): ImageView {
-        if (viewList.size < MAX_VIEWS) {
-            val imageView = createImageView()
-            viewList.add(imageView)
-            binding.imageList.addView(imageView)
-
-//            Log.e(TAG, "createOrRecycleView: 1")
-            return viewList.last()
-        } else {
-            val v = viewList.first()
-//            Log.e(TAG, "createOrRecycleView: List ${v.translationY} $offset")
-            return v
-        }
-    }
-
     private suspend fun drawPanel(panel: MangaPanel, index: Int) {
-        val zipFilePath = vMangaFile.mangaFile.value?.path
-        zipFilePath?.let {
-            val offsetMap = itemOffsetList.get(index)
-            val view = createOrRecycleView(currentY)
-            Log.e(TAG, "drawPanel ${index} ${view.id}")
-            view.id = index
+        val zipFilePath = vMangaFile.mangaFile.value?.path ?: return
 
-            val params = FrameLayout.LayoutParams(
-                screenWidth,
-                offsetMap.height
-            )
-            view.layoutParams = params
-            view.translationY = offsetMap.offset.toFloat()
+        val offsetMap = itemOffsetList.getOrNull(index) ?: return
+        val view = createImageView()
 
-            val bitmap = withContext(Dispatchers.IO) {
-                extractImageFromZip(zipFilePath, panel.page_name)
-            }
-            view.setImageBitmap(bitmap)
-        }
-    }
+        Log.e(TAG, "drawPanel ${index} ${view.id}")
+        view.id = index
 
-    suspend private fun addImage(
-        zipPath: String,
-        data: MangaPanel,
-        offsetMap: OffsetMap,
-        index: Int
-    ) {
-        val imageView = ImageView(this)
-
-        val params = LinearLayout.LayoutParams(screenWidth, offsetMap.height)
-
-        imageView.apply {
-            layoutParams = params
-            scaleType = ImageView.ScaleType.FIT_XY
-            translationY = offsetMap.offset.toFloat()
-        }
-        binding.imageList.addView(imageView, index)
+        val params = FrameLayout.LayoutParams(
+            screenWidth,
+            offsetMap.height
+        )
+        view.layoutParams = params
+        view.translationY = offsetMap.offset.toFloat()
 
         val bitmap = withContext(Dispatchers.IO) {
-            extractImageFromZip(zipPath, data.page_name)
+            extractImageFromZip(zipFilePath, panel.page_name)
         }
-        imageView.setImageBitmap(bitmap)
+        view.setImageBitmap(bitmap)
 
+        binding.imageList.addView(view)
+        viewList.add(view)
     }
 
     private fun setupPanelObserver() {
@@ -260,7 +240,7 @@ class MangaReaderActivity : ComponentActivity() {
                         uiSetup.loadMangaPanels(manga)
                     } else {
                         binding.progressbar.visibility = View.GONE
-                        loadImages(vMangaPanel.mangaPanels.value!!)
+                        loadImages(panels)
                     }
                 }
             }
