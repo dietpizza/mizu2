@@ -1,7 +1,10 @@
 package com.kepsake.mizu2.helpers
 
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.animation.DecelerateInterpolator
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.kepsake.mizu2.activities.MangaReaderActivity
@@ -26,6 +29,36 @@ class MangaReaderUIHelper(
     private val vMangaPanel: MangaPanelViewModel,
     private val lifecycleScope: LifecycleCoroutineScope
 ) {
+
+    val TAG = "MangaReaderUIHelper"
+
+    @SuppressLint("ClickableViewAccessibility")
+    fun setupGestureDetector() {
+        val gestureDetector =
+            GestureDetector(activity, object : GestureDetector.SimpleOnGestureListener() {
+                override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                    Log.e(TAG, "onSingleTapConfirmed: ")
+                    return true
+                }
+
+                override fun onDoubleTap(e: MotionEvent): Boolean {
+                    Log.e(TAG, "onDoubleTap: ")
+                    binding.zoomLayout.engine.apply {
+                        if (zoom > 1f) {
+                            zoomTo(1f, true)
+                        } else {
+                            zoomTo(3f, true)
+                        }
+                    }
+                    return true
+                }
+            })
+
+        binding.zoomLayout.setOnTouchListener { v, ev ->
+            gestureDetector.onTouchEvent(ev)
+            false
+        }
+    }
 
     suspend fun loadMangaPanels(mangaFile: MangaFile) {
         val entries = getZipFileEntries(mangaFile.path)
