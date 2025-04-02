@@ -2,26 +2,16 @@ package com.kepsake.mizu2.helpers
 
 import android.animation.ObjectAnimator
 import android.util.Log
-import android.view.View
 import android.view.animation.DecelerateInterpolator
-import androidx.core.view.updatePadding
 import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.slider.Slider
 import com.kepsake.mizu2.activities.MangaReaderActivity
-import com.kepsake.mizu2.adapters.MangaPanelAdapter
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.data.models.MangaPanel
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.data.viewmodels.MangaPanelViewModel
 import com.kepsake.mizu2.databinding.ActivityMangaReaderBinding
 import com.kepsake.mizu2.logic.NaturalOrderComparator
-import com.kepsake.mizu2.ui.SpaceItemDecoration
-import com.kepsake.mizu2.utils.RecyclerViewPageTracker
-import com.kepsake.mizu2.utils.dpToPx
 import com.kepsake.mizu2.utils.getMangaPagesAspectRatios
-import com.kepsake.mizu2.utils.getSystemBarsHeight
 import com.kepsake.mizu2.utils.getZipFileEntries
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -36,106 +26,6 @@ class MangaReaderUIHelper(
     private val vMangaPanel: MangaPanelViewModel,
     private val lifecycleScope: LifecycleCoroutineScope
 ) {
-    private val TAG = "MangaReaderUIHelper"
-    private lateinit var mangaPanelAdapter: MangaPanelAdapter
-
-    fun initSliderToolbar(max: Int) {
-        val currentPage = vMangaFile.mangaFile.value?.current_page ?: 0
-        binding.mangaReader.apply {
-            binding.buttonFirstPage.setOnClickListener {
-                scrollToPosition(0)
-            }
-            binding.buttonLastPage.setOnClickListener {
-                scrollToPosition(max)
-            }
-        }
-
-        binding.pageSlider.apply {
-            value = currentPage.toFloat()
-            valueFrom = 0f
-            valueTo = max.toFloat()
-            stepSize = 1f
-
-            addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-                // No-op here, have to override both
-                override fun onStartTrackingTouch(slider: Slider) {}
-
-                override fun onStopTrackingTouch(slider: Slider) {
-                    binding.mangaReader.scrollToPosition(slider.value.toInt())
-                }
-            })
-        }
-    }
-
-    fun initReader() {
-        vMangaFile.mangaFile.value?.let { manga ->
-            val heights = getSystemBarsHeight(activity)
-            mangaPanelAdapter = MangaPanelAdapter(manga, emptyList())
-
-            binding.mangaReader.updatePadding()
-            binding.mangaReader.apply {
-                layoutManager = LinearLayoutManager(activity)
-                adapter = mangaPanelAdapter
-                clipToPadding = false
-
-                updatePadding(
-                    top = heights.statusBarHeight,
-                    bottom = heights.navigationBarHeight
-                )
-                longTapListener = { ev ->
-                    binding.bottomAppBar.apply {
-                        if (isScrolledUp) {
-                            performHide(true)
-                        } else {
-                            performShow(true)
-                        }
-                    }
-                    true
-                }
-                setHasFixedSize(true)
-                addOnScrollListener(createScrollListener())
-                addItemDecoration(SpaceItemDecoration(8.dpToPx()))
-            }
-            RecyclerViewPageTracker(binding.mangaReader, onNewVisiblePosition = {
-                Log.e(TAG, "initReader Page: $it")
-            })
-        }
-    }
-
-    fun updatePanels(panels: List<MangaPanel>) {
-        mangaPanelAdapter.updateData(panels)
-    }
-
-    fun syncViewVisibility() {
-        if (mangaPanelAdapter.itemCount > 0) {
-            binding.progressbar.visibility = View.GONE
-        }
-    }
-
-    private fun createScrollListener() = object : RecyclerView.OnScrollListener() {
-        private var currentPage = 0
-
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            super.onScrolled(recyclerView, dx, dy)
-            val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-            var visiblePageIndex = layoutManager.findFirstCompletelyVisibleItemPosition()
-
-            if (visiblePageIndex < 0)
-                visiblePageIndex = layoutManager.findLastVisibleItemPosition()
-
-            if (visiblePageIndex >= 0 && visiblePageIndex != currentPage) {
-                binding.buttonFirstPage.isEnabled = visiblePageIndex != 0
-                binding.buttonLastPage.isEnabled =
-                    visiblePageIndex != mangaPanelAdapter.itemCount - 1
-
-                vMangaFile.mangaFile.value?.let {
-                    vMangaFile.silentUpdateCurrentPage(it.id, visiblePageIndex)
-                    binding.pageSlider.value = visiblePageIndex.toFloat()
-                }
-                currentPage = visiblePageIndex
-            }
-        }
-    }
 
     suspend fun loadMangaPanels(mangaFile: MangaFile) {
         val entries = getZipFileEntries(mangaFile.path)
@@ -148,6 +38,7 @@ class MangaReaderUIHelper(
 
             progressFlow.collect { percent ->
                 if (prevPercent != percent && percent % 10 == 0) {
+                    Log.e("TAG", "loadMangaPanels: Update Percent")
                     ObjectAnimator.ofInt(
                         binding.progressbar,
                         "progress",
@@ -181,6 +72,5 @@ class MangaReaderUIHelper(
             }
             vMangaPanel.addMangaPanels(allPages)
         }
-
     }
 }

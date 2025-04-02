@@ -4,16 +4,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.kepsake.mizu2.ui.webtoon.ZoomableRecyclerViewFrame
-        android:id="@+id/mangaReaderFrame"
+    <com.otaliastudios.zoom.ZoomLayout
+        android:id="@+id/zoomLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.kepsake.mizu2.ui.webtoon.ZoomableRecyclerView
-            android:id="@+id/mangaReader"
+        <FrameLayout
+            android:id="@+id/imageList"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </com.kepsake.mizu2.ui.webtoon.ZoomableRecyclerViewFrame>
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </com.otaliastudios.zoom.ZoomLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -32,52 +34,5 @@
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <com.google.android.material.bottomappbar.BottomAppBar
-            android:id="@+id/bottomAppBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonFirstPage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:icon="@drawable/ic_first_page"
-                    style="?attr/materialIconButtonStyle" />
-
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/pageSlider"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:stepSize="1.0"
-                    android:value="0"
-                    android:valueFrom="0f"
-                    android:valueTo="100f"
-                    app:trackHeight="12dp"
-                    app:thumbHeight="32dp" />
-
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonLastPage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:icon="@drawable/ic_last_page"
-                    style="?attr/materialIconButtonStyle" />
-
-            </LinearLayout>
-        </com.google.android.material.bottomappbar.BottomAppBar>
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
