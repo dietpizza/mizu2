@@ -54,6 +54,8 @@ dependencies {
     implementation libs.androidx.swiperefreshlayout
     implementation libs.coil.kt.coil.compose
 
+    implementation(project(":library"))
+
     implementation libs.androidx.room.runtime
     implementation libs.androidx.room.ktx
     ksp libs.androidx.room.compiler
