@@ -213,20 +213,27 @@ class MangaReaderActivity : ComponentActivity() {
     }
 
     private suspend fun drawPanel(index: Int) {
-        val imageView = if (viewPool.size == MAX_VIEWS) {
-            if (scrollDirection == ScrollDirection.DOWN)
-                viewPool.minBy { it.translationY }
-            else
-                viewPool.maxBy { it.translationY }
-        } else {
-            val newImageView = createImageView()
-            newImageView.id = index
+        val imageView =
+            if (viewPool.size == MAX_VIEWS) {
+                var newImageView: ImageView
+                newImageView =
+                    if (scrollDirection == ScrollDirection.DOWN)
+                        viewPool.minBy { it.translationY }
+                    else
+                        viewPool.maxBy { it.translationY }
 
-            viewPool.add(newImageView)
-            binding.imageList.addView(newImageView)
+                newImageView.setImageBitmap(null)
 
-            newImageView
-        }
+                newImageView
+            } else {
+                val newImageView = createImageView()
+                newImageView.id = index
+
+                viewPool.add(newImageView)
+                binding.imageList.addView(newImageView)
+
+                newImageView
+            }
 
         drawImage(imageView, index)
     }
