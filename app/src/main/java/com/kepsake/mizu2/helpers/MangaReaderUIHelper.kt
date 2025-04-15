@@ -38,6 +38,13 @@ class MangaReaderUIHelper(
             GestureDetector(activity, object : GestureDetector.SimpleOnGestureListener() {
                 override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
                     Log.e(TAG, "onSingleTapConfirmed: ")
+                    binding.bottomAppBar.apply {
+                        if (isScrolledUp) {
+                            performHide(true)
+                        } else {
+                            performShow(true)
+                        }
+                    }
                     return true
                 }
 

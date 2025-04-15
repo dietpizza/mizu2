@@ -17,6 +17,7 @@ import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.data.viewmodels.MangaPanelViewModel
 import com.kepsake.mizu2.databinding.ActivityMangaReaderBinding
 import com.kepsake.mizu2.helpers.MangaReaderUIHelper
+import com.kepsake.mizu2.logic.computeVisibleIndex
 import com.kepsake.mizu2.utils.dpToPx
 import com.kepsake.mizu2.utils.extractImageFromZip
 import com.otaliastudios.zoom.ZoomEngine
@@ -85,10 +86,10 @@ class MangaReaderActivity : ComponentActivity() {
                 object : ZoomEngine.Listener {
                     override fun onIdle(engine: ZoomEngine) {}
                     override fun onUpdate(engine: ZoomEngine, matrix: Matrix) {
-                        currentY = -engine.panY.toInt()
+                        currentY = -engine.panY.toInt() + screenWidth / 2
 
                         if (currentY != prevY) {
-                            currentIndex = computeVisibleIndex()
+                            currentIndex = computeVisibleIndex(currentY, itemOffsetList)
                             scrollDirection =
                                 if (currentY > prevY) ScrollDirection.DOWN else ScrollDirection.UP
 
@@ -106,6 +107,10 @@ class MangaReaderActivity : ComponentActivity() {
 
         binding.zoomLayout.post {
             uiSetup.setupGestureDetector()
+        }
+
+        binding.bottomAppBar.post {
+            binding.bottomAppBar.performHide(false)
         }
 
         setupObservers()
@@ -135,49 +140,6 @@ class MangaReaderActivity : ComponentActivity() {
         binding.imageList.layoutParams = params
 
         manageViews()
-    }
-
-    private fun computeVisibleIndex(): Int {
-        if (itemOffsetList.isEmpty()) return -1
-
-        // Handle single item case
-        if (itemOffsetList.size == 1) return 0
-
-        // Edge cases - if currentY is beyond list bounds
-        if (currentY <= itemOffsetList[0].offset) return 0
-        if (currentY >= itemOffsetList.last().offset) return itemOffsetList.lastIndex
-
-        // Binary search to find the closest item to currentY
-        var left = 0
-        var right = itemOffsetList.lastIndex
-
-        while (left <= right) {
-            val mid = left + (right - left) / 2
-            val midOffset = itemOffsetList[mid].offset
-
-            when {
-                midOffset == currentY -> return mid
-                midOffset < currentY -> {
-                    // Check if this is the closest one or we need to go right
-                    if (mid < itemOffsetList.lastIndex && itemOffsetList[mid + 1].offset > currentY) {
-                        // Found the closest item
-                        return if (currentY - midOffset < itemOffsetList[mid + 1].offset - currentY) mid else mid + 1
-                    }
-                    left = mid + 1
-                }
-
-                else -> {
-                    // Check if this is the closest one or we need to go left
-                    if (mid > 0 && itemOffsetList[mid - 1].offset < currentY) {
-                        // Found the closest item
-                        return if (midOffset - currentY < currentY - itemOffsetList[mid - 1].offset) mid else mid - 1
-                    }
-                    right = mid - 1
-                }
-            }
-        }
-
-        return left.coerceIn(0, itemOffsetList.lastIndex)
     }
 
     suspend fun manageViews() {
@@ -238,7 +200,7 @@ class MangaReaderActivity : ComponentActivity() {
         drawImage(imageView, index)
     }
 
-    suspend fun drawImage(v: ImageView, index: Int) {
+    suspend fun drawImage(view: ImageView, index: Int) {
         Log.e(TAG, "draw: index: $index")
 
         val zipFilePath = vMangaFile.mangaFile.value?.path ?: return
@@ -249,17 +211,16 @@ class MangaReaderActivity : ComponentActivity() {
         val vP = panelMeta.panel
 
         val params = FrameLayout.LayoutParams(screenWidth, vH)
-        v.layoutParams = params
-        v.translationY = vY.toFloat()
-        v.id = index
+        view.layoutParams = params
+        view.translationY = vY.toFloat()
+        view.id = index
 
-        val bitmap = withContext(Dispatchers.IO) {
-            extractImageFromZip(zipFilePath, vP.page_name)
-        }
-        v.setImageBitmap(bitmap)
-        v.load(bitmap) {
-            crossfade(true)
-            crossfade(300)
+        withContext(Dispatchers.IO) {
+            val bitmap = extractImageFromZip(zipFilePath, vP.page_name)
+            view.load(bitmap) {
+                crossfade(true)
+                crossfade(300)
+            }
         }
     }
 
