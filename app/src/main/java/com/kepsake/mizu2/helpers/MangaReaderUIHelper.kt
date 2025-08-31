@@ -7,6 +7,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.animation.DecelerateInterpolator
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.google.android.material.slider.Slider
 import com.kepsake.mizu2.activities.MangaReaderActivity
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.data.models.MangaPanel
@@ -36,8 +37,14 @@ class MangaReaderUIHelper(
     fun setupGestureDetector() {
         val gestureDetector =
             GestureDetector(activity, object : GestureDetector.SimpleOnGestureListener() {
-                override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                    Log.e(TAG, "onSingleTapConfirmed: ")
+//                override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+//                    Log.e(TAG, "onSingleTapConfirmed: ")
+//                    return true
+//                }
+
+                override fun onLongPress(e: MotionEvent) {
+                    super.onLongPress(e)
+                    Log.e(TAG, "onLongPressConfirmed: ")
                     binding.bottomAppBar.apply {
                         if (isScrolledUp) {
                             performHide(true)
@@ -45,7 +52,6 @@ class MangaReaderUIHelper(
                             performShow(true)
                         }
                     }
-                    return true
                 }
 
                 override fun onDoubleTap(e: MotionEvent): Boolean {
@@ -65,6 +71,19 @@ class MangaReaderUIHelper(
             gestureDetector.onTouchEvent(ev)
             false
         }
+
+        binding.pageSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+                // No need for this yet
+            }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                Log.e(TAG, "onSliderChangeEnd ${slider.value}")
+                Log.e(TAG, "panY ${binding.zoomLayout.panY}")
+                Log.e(TAG, "panX ${binding.zoomLayout.panX}")
+                binding.zoomLayout.engine.panTo(0f, 200 * slider.value * -1, false)
+            }
+        })
     }
 
     suspend fun loadMangaPanels(mangaFile: MangaFile) {
