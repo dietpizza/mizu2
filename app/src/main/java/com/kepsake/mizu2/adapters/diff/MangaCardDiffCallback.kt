@@ -22,7 +22,7 @@ class MangaCardDiffCallback(
 
         return oldItem.name == newItem.name
                 && oldItem.cover_path == newItem.cover_path
-                && oldItem.current_page == newItem.current_page
+                && oldItem.current_progress == newItem.current_progress
                 && oldItem.total_pages == newItem.total_pages
     }
 }

@@ -86,7 +86,7 @@ class MangaFileViewModel(application: Application) : AndroidViewModel(applicatio
                 val existing = filesInDb.find { it.path == fileOnDisk.path }
                 if (existing != null) {
                     fileOnDisk.id = existing.id
-                    fileOnDisk.current_page = existing.current_page
+                    fileOnDisk.current_progress = existing.current_progress
                 }
                 fileOnDisk
             }
@@ -132,11 +132,11 @@ class MangaFileViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun silentUpdateCurrentPage(id: Long, page: Int) {
+    fun silentUpdateCurrentProgress(id: Long, progress: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val manga = mangaFileDao.getById(id)
             if (manga != null) {
-                manga.current_page = page
+                manga.current_progress = progress
                 mangaFileDao.insertOrUpdate(manga)
             }
         }

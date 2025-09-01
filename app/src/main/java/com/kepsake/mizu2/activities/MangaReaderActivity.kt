@@ -63,6 +63,7 @@ class MangaReaderActivity : ComponentActivity() {
 
     private var viewPool = mutableListOf<ImageView>()
     private var mangaPanelsLayoutMeta = mutableListOf<PanelLayoutMeta>()
+    private var delY = 0f
 
     private val uiSetup by lazy {
         MangaReaderUIHelper(this, binding, vMangaFile, vMangaPanel, lifecycleScope)
@@ -95,6 +96,21 @@ class MangaReaderActivity : ComponentActivity() {
 
                             if (currentIndex != prevIndex) {
                                 lifecycleScope.launch { manageViews() }
+                            }
+
+                            val _delY = prevY - currentY
+                            delY = delY + Math.abs(_delY)
+
+                            if (delY > 25) {
+                                Log.e(TAG, "Delta Y ${delY}")
+                                vMangaFile.mangaFile.value?.let { mf ->
+                                    Log.e(TAG, "Updating Current Progress ${engine.panY}")
+                                    vMangaFile.silentUpdateCurrentProgress(
+                                        mf.id, engine.panY.toInt()
+                                    )
+                                }
+
+                                delY = 0f
                             }
 
                             prevY = currentY
@@ -145,6 +161,15 @@ class MangaReaderActivity : ComponentActivity() {
         binding.imageList.layoutParams = params
 
         manageViews()
+
+        vMangaFile.mangaFile.value?.let { mf ->
+            Log.e(TAG, "Current Progress ${mf.current_progress}")
+            if (Math.abs(mf.current_progress) > 0) {
+                Log.e(TAG, "Panning to ${mf.current_progress.toFloat()}")
+                binding.zoomLayout.panTo(0f, mf.current_progress.toFloat(), false)
+            }
+        }
+
     }
 
     suspend fun manageViews() {

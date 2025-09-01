@@ -80,7 +80,7 @@ class MangaReaderUIHelper(
                 Log.e(TAG, "onSliderChangeEnd ${slider.value}")
 
                 val newPanY = panelsLayoutMeta[slider.value.toInt()].offset * -1
-                Log.e(TAG, "panX ${newPanY}")
+                Log.e(TAG, "panY ${newPanY}")
 
                 binding.zoomLayout.engine.panTo(0f, newPanY.toFloat(), false)
             }

@@ -19,7 +19,7 @@ data class MangaFile(
     var path: String,
     var name: String,
     var cover_path: String,
-    var current_page: Int,
+    var current_progress: Int,
     var total_pages: Int,
     var last_modified: Long
 ) : Parcelable

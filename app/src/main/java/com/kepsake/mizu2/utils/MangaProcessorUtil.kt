@@ -36,7 +36,7 @@ suspend fun processMangaFiles(
                             path = path,
                             name = file.nameWithoutExtension,
                             cover_path = coverPath,
-                            current_page = 0,
+                            current_progress = 0,
                             total_pages = pageCount,
                             last_modified = lastModified
                         )
