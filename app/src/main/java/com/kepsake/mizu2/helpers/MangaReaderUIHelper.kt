@@ -7,7 +7,9 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.animation.DecelerateInterpolator
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.google.android.material.slider.Slider
 import com.kepsake.mizu2.activities.MangaReaderActivity
+import com.kepsake.mizu2.activities.PanelLayoutMeta
 import com.kepsake.mizu2.data.models.MangaFile
 import com.kepsake.mizu2.data.models.MangaPanel
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
@@ -66,6 +68,23 @@ class MangaReaderUIHelper(
             false
         }
 
+    }
+
+    fun setupPageSlider(panelsLayoutMeta: MutableList<PanelLayoutMeta>) {
+        binding.pageSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+                // No need for this yet
+            }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                Log.e(TAG, "onSliderChangeEnd ${slider.value}")
+
+                val newPanY = panelsLayoutMeta[slider.value.toInt()].offset * -1
+                Log.e(TAG, "panX ${newPanY}")
+
+                binding.zoomLayout.engine.panTo(0f, newPanY.toFloat(), false)
+            }
+        })
     }
 
     suspend fun loadMangaPanels(mangaFile: MangaFile) {

@@ -12,7 +12,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import coil.load
-import com.google.android.material.slider.Slider
 import com.kepsake.mizu2.data.models.MangaPanel
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.data.viewmodels.MangaPanelViewModel
@@ -33,7 +32,7 @@ enum class ScrollDirection {
     DOWN
 }
 
-data class ViewOffsetMap(
+data class PanelLayoutMeta(
     var offset: Int,
     var height: Int,
     var panel: MangaPanel,
@@ -63,7 +62,7 @@ class MangaReaderActivity : ComponentActivity() {
     private val PREFETCH_DISTANCE = MAX_VIEWS / 2
 
     private var viewPool = mutableListOf<ImageView>()
-    private var itemOffsetList = mutableListOf<ViewOffsetMap>()
+    private var mangaPanelsLayoutMeta = mutableListOf<PanelLayoutMeta>()
 
     private val uiSetup by lazy {
         MangaReaderUIHelper(this, binding, vMangaFile, vMangaPanel, lifecycleScope)
@@ -90,7 +89,7 @@ class MangaReaderActivity : ComponentActivity() {
                         currentY = -engine.panY.toInt() + screenWidth / 2
 
                         if (currentY != prevY) {
-                            currentIndex = computeVisibleIndex(currentY, itemOffsetList)
+                            currentIndex = computeVisibleIndex(currentY, mangaPanelsLayoutMeta)
                             scrollDirection =
                                 if (currentY > prevY) ScrollDirection.DOWN else ScrollDirection.UP
 
@@ -110,19 +109,7 @@ class MangaReaderActivity : ComponentActivity() {
             uiSetup.setupGestureDetector()
         }
         binding.pageSlider.post {
-            binding.pageSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-                override fun onStartTrackingTouch(slider: Slider) {
-                    // No need for this yet
-                }
-
-                override fun onStopTrackingTouch(slider: Slider) {
-                    Log.e(TAG, "onSliderChangeEnd ${slider.value}")
-
-                    val newPanY = itemOffsetList[slider.value.toInt()].offset * -1
-                    Log.e(TAG, "panX ${newPanY}")
-                    binding.zoomLayout.engine.panTo(0f, newPanY.toFloat(), false)
-                }
-            })
+            uiSetup.setupPageSlider(mangaPanelsLayoutMeta)
         }
 
         binding.bottomAppBar.post {
@@ -143,11 +130,11 @@ class MangaReaderActivity : ComponentActivity() {
         var containerHeight = 0
 
         // Clear existing offset list when loading new images
-        itemOffsetList.clear()
+        mangaPanelsLayoutMeta.clear()
 
         images.forEachIndexed { index, image ->
             val h = (screenWidth / image.aspect_ratio)
-            itemOffsetList.add(ViewOffsetMap(containerHeight, h.toInt(), image, null))
+            mangaPanelsLayoutMeta.add(PanelLayoutMeta(containerHeight, h.toInt(), image, null))
             containerHeight += h.toInt() + 8.dpToPx()
         }
         Log.e(TAG, "Number of images ${images.size}")
@@ -161,12 +148,13 @@ class MangaReaderActivity : ComponentActivity() {
     }
 
     suspend fun manageViews() {
-        if (itemOffsetList.isEmpty() || vMangaPanel.mangaPanels.value.isNullOrEmpty() || currentIndex < 0)
+        if (mangaPanelsLayoutMeta.isEmpty() || vMangaPanel.mangaPanels.value.isNullOrEmpty() || currentIndex < 0)
             return
 
 
         val startIdx = max(0, currentIndex - PREFETCH_DISTANCE)
-        val endIdx = min(itemOffsetList.size - 1, currentIndex + MAX_VIEWS - PREFETCH_DISTANCE)
+        val endIdx =
+            min(mangaPanelsLayoutMeta.size - 1, currentIndex + MAX_VIEWS - PREFETCH_DISTANCE)
         val indexesToDraw = (startIdx..endIdx).toList()
 
         val presentIndexes = viewPool.map { it.id }.toList()
@@ -222,7 +210,7 @@ class MangaReaderActivity : ComponentActivity() {
         Log.e(TAG, "draw: index: $index")
 
         val zipFilePath = vMangaFile.mangaFile.value?.path ?: return
-        val panelMeta = itemOffsetList.getOrNull(index) ?: return
+        val panelMeta = mangaPanelsLayoutMeta.getOrNull(index) ?: return
 
         val vY = panelMeta.offset
         val vH = panelMeta.height

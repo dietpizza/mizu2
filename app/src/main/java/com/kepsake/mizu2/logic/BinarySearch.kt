@@ -1,8 +1,8 @@
 package com.kepsake.mizu2.logic
 
-import com.kepsake.mizu2.activities.ViewOffsetMap
+import com.kepsake.mizu2.activities.PanelLayoutMeta
 
-fun computeVisibleIndex(currentY: Int, itemOffsetList: List<ViewOffsetMap>): Int {
+fun computeVisibleIndex(currentY: Int, itemOffsetList: List<PanelLayoutMeta>): Int {
     if (itemOffsetList.isEmpty()) return -1
 
     // Handle single item case
