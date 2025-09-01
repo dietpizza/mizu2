@@ -12,6 +12,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import coil.load
+import com.google.android.material.slider.Slider
 import com.kepsake.mizu2.data.models.MangaPanel
 import com.kepsake.mizu2.data.viewmodels.MangaFileViewModel
 import com.kepsake.mizu2.data.viewmodels.MangaPanelViewModel
@@ -108,6 +109,21 @@ class MangaReaderActivity : ComponentActivity() {
         binding.zoomLayout.post {
             uiSetup.setupGestureDetector()
         }
+        binding.pageSlider.post {
+            binding.pageSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+                override fun onStartTrackingTouch(slider: Slider) {
+                    // No need for this yet
+                }
+
+                override fun onStopTrackingTouch(slider: Slider) {
+                    Log.e(TAG, "onSliderChangeEnd ${slider.value}")
+
+                    val newPanY = itemOffsetList[slider.value.toInt()].offset * -1
+                    Log.e(TAG, "panX ${newPanY}")
+                    binding.zoomLayout.engine.panTo(0f, newPanY.toFloat(), false)
+                }
+            })
+        }
 
         binding.bottomAppBar.post {
             binding.bottomAppBar.performHide(false)
@@ -134,6 +150,8 @@ class MangaReaderActivity : ComponentActivity() {
             itemOffsetList.add(ViewOffsetMap(containerHeight, h.toInt(), image, null))
             containerHeight += h.toInt() + 8.dpToPx()
         }
+        Log.e(TAG, "Number of images ${images.size}")
+        binding.pageSlider.valueTo = images.size.toFloat() - 1f
 
         val params = binding.imageList.layoutParams
         params.height = containerHeight
