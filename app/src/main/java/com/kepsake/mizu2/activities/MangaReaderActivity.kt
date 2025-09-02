@@ -102,9 +102,7 @@ class MangaReaderActivity : ComponentActivity() {
                             delY = delY + Math.abs(_delY)
 
                             if (delY > 25) {
-                                Log.e(TAG, "Delta Y ${delY}")
                                 vMangaFile.mangaFile.value?.let { mf ->
-                                    Log.e(TAG, "Updating Current Progress ${engine.panY}")
                                     vMangaFile.silentUpdateCurrentProgress(
                                         mf.id, engine.panY.toInt()
                                     )
@@ -153,7 +151,6 @@ class MangaReaderActivity : ComponentActivity() {
             mangaPanelsLayoutMeta.add(PanelLayoutMeta(containerHeight, h.toInt(), image, null))
             containerHeight += h.toInt() + 8.dpToPx()
         }
-        Log.e(TAG, "Number of images ${images.size}")
         binding.pageSlider.valueTo = images.size.toFloat() - 1f
 
         val params = binding.imageList.layoutParams
@@ -163,7 +160,6 @@ class MangaReaderActivity : ComponentActivity() {
         manageViews()
 
         vMangaFile.mangaFile.value?.let { mf ->
-            Log.e(TAG, "Current Progress ${mf.current_progress}")
             if (Math.abs(mf.current_progress) > 0) {
                 Log.e(TAG, "Panning to ${mf.current_progress.toFloat()}")
                 binding.zoomLayout.panTo(0f, mf.current_progress.toFloat(), false)
@@ -232,8 +228,6 @@ class MangaReaderActivity : ComponentActivity() {
     }
 
     suspend fun drawImage(view: ImageView, index: Int) {
-        Log.e(TAG, "draw: index: $index")
-
         val zipFilePath = vMangaFile.mangaFile.value?.path ?: return
         val panelMeta = mangaPanelsLayoutMeta.getOrNull(index) ?: return
 
