@@ -113,6 +113,8 @@ class MangaReaderActivity : ComponentActivity() {
 
                             prevY = currentY
                             prevIndex = currentIndex
+
+                            binding.pageSlider.value = currentIndex.toFloat()
                         }
                     }
                 }

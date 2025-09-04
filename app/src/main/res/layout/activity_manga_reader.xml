@@ -65,8 +65,8 @@
                     android:layout_height="wrap_content"
                     android:stepSize="1.0"
                     android:value="0"
-                    android:valueFrom="0f"
-                    android:valueTo="100f"
+                    android:valueFrom="0"
+                    android:valueTo="100"
                     app:trackHeight="12dp"
                     app:thumbHeight="32dp" />
 
