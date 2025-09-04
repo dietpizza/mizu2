@@ -13,7 +13,14 @@
             android:id="@+id/imageList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/dummyImage"
+                android:layout_width="2000dp"
+                android:layout_height="1dp"
+                android:src="@drawable/ic_launcher_background" />
+        </FrameLayout>
 
     </com.otaliastudios.zoom.ZoomLayout>
 

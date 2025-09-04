@@ -114,7 +114,7 @@ class MangaReaderActivity : ComponentActivity() {
                             prevY = currentY
                             prevIndex = currentIndex
 
-                            binding.pageSlider.value = currentIndex.toFloat()
+                            binding.pageSlider.value = Math.max(currentIndex.toFloat(), 0f)
                         }
                     }
                 }
@@ -123,6 +123,11 @@ class MangaReaderActivity : ComponentActivity() {
 
         binding.zoomLayout.post {
             uiSetup.setupGestureDetector()
+            val params = FrameLayout.LayoutParams(
+                screenWidth,
+                1
+            )
+            binding.dummyImage.apply { layoutParams = params }
         }
         binding.pageSlider.post {
             uiSetup.setupPageSlider(mangaPanelsLayoutMeta)
@@ -142,7 +147,18 @@ class MangaReaderActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun prepareOffsetsAndContainer(images: List<MangaPanel>) {
+    private fun scrollToLastPosition() {
+        vMangaFile.mangaFile.value?.let { mf ->
+            val cp = mf.current_progress.toFloat()
+
+            if (Math.abs(cp) > 0) {
+                Log.e(TAG, "Panning to ${cp}")
+                binding.zoomLayout.engine.panTo(0f, cp, false)
+            }
+        }
+    }
+
+    private fun prepareOffsetsAndContainer(images: List<MangaPanel>) {
         var containerHeight = 0
 
         // Clear existing offset list when loading new images
@@ -159,14 +175,13 @@ class MangaReaderActivity : ComponentActivity() {
         params.height = containerHeight
         binding.imageList.layoutParams = params
 
-        manageViews()
-
-        vMangaFile.mangaFile.value?.let { mf ->
-            if (Math.abs(mf.current_progress) > 0) {
-                Log.e(TAG, "Panning to ${mf.current_progress.toFloat()}")
-                binding.zoomLayout.panTo(0f, mf.current_progress.toFloat(), false)
+        binding.imageList.post {
+            lifecycleScope.launch {
+                scrollToLastPosition()
+                manageViews()
             }
         }
+
 
     }
 
